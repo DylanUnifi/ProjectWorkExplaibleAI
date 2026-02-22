@@ -40,7 +40,7 @@ def _create_quantum_layer(n_qubits, n_layers=2, backend="lightning.qubit"):
         qml.templates.AngleEmbedding(inputs, wires=range(n_qubits), rotation="Y")
         qml.templates.AngleEmbedding(inputs, wires=range(n_qubits), rotation="Z")
         qml.templates.BasicEntanglerLayers(weights, wires=range(n_qubits))
-        return [qml.expval(qml.PauliZ(i)) for i in range(n_qubits)]
+        return tuple(qml.expval(qml.PauliZ(i)) for i in range(n_qubits))
 
     weight_shapes = {"weights": (n_layers, n_qubits)}
     layer = qml.qnn.TorchLayer(qnode, weight_shapes)
@@ -119,7 +119,14 @@ class CLEVRQCNNClassifier(nn.Module):
 
         # Quantum layer
         x = torch.tanh(self.quantum_fc_input(x)) * np.pi
+        batch_size = x.shape[0]
         x_quantum = self.quantum_layer(x)
+        # PennyLane v0.44+ may return flat tensor; reshape to (batch, n_qubits)
+        if x_quantum.dim() == 1:
+            x_quantum = x_quantum.unsqueeze(0)
+        if x_quantum.shape[0] != batch_size:
+            n_qubits = x_quantum.numel() // batch_size
+            x_quantum = x_quantum.reshape(batch_size, n_qubits)
         x_quantum = x_quantum.to(target_device)
 
         # Multi-class logits (no sigmoid — use CrossEntropyLoss)

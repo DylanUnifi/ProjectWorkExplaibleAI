@@ -13,7 +13,7 @@ model:
 quantum:
   n_qubits: 8
   layers: 3
-  backend: "lightning.gpu"
+  backend: "lightning.qubit"
 
 training:
   batch_size: 32              # ✅ With AMP on Blackwell

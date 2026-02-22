@@ -11,7 +11,7 @@ dataset:
 quantum:
   n_qubits: 10
   layers: 2
-  backend: "lightning.gpu"
+  backend: "lightning.qubit"
 
 methods:
   shap:

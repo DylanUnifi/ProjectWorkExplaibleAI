@@ -58,7 +58,7 @@ def train_clevr_hans(config):
     )
     
     # Multi-GPU
-    if DEVICE.type == "cuda" and torch.cuda.device_count() > 1:
+    if False:  # DataParallel disabled: incompatible with PennyLane quantum layers
         model = nn.DataParallel(model)
     
     model = model.to(DEVICE)
