@@ -117,23 +117,25 @@ class CLEVRQCNNClassifier(nn.Module):
         x = self.dropout(x)
         x = self.classical_head(x)
 
-        # Quantum layer
-        x = torch.tanh(self.quantum_fc_input(x)) * np.pi
-        batch_size = x.shape[0]
-        x_quantum = self.quantum_layer(x)
-        # PennyLane v0.44+ may return flat tensor; reshape to (batch, n_qubits)
-        if x_quantum.dim() == 1:
-            x_quantum = x_quantum.unsqueeze(0)
-        if x_quantum.shape[0] != batch_size:
-            n_qubits = x_quantum.numel() // batch_size
-            x_quantum = x_quantum.reshape(batch_size, n_qubits)
-        x_quantum = x_quantum.to(target_device)
-        x_quantum = self.bn_q(x_quantum)
+        # Quantum layer with residual connection
+        # Project to quantum dimensions
+        x_proj = self.quantum_fc_input(x)
+        x_q_input = torch.tanh(x_proj) * np.pi
 
-        # Multi-class logits (no sigmoid — use CrossEntropyLoss)
-        logits = self.final_fc(x_quantum)
+        batch_size = x_q_input.shape[0]
+        n_q = self.quantum_fc_input.out_features
+        x_quantum = self.quantum_layer(x_q_input)
+        x_quantum = x_quantum.reshape(batch_size, n_q)
+        x_quantum = x_quantum.to(target_device)
+
+        # Residual: classical projection + quantum output
+        x_combined = x_proj + x_quantum
+        x_combined = self.bn_q(x_combined)
+
+        # Multi-class logits
+        logits = self.final_fc(x_combined)
 
         if return_features:
-            return logits, x_quantum
+            return logits, x_combined
 
         return logits

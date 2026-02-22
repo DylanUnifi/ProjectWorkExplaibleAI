@@ -1,0 +1,71 @@
+# configs/train_all_models.yaml
+
+experiment_name: "xai_comparative_study_clevr_hans3"
+
+dataset:
+  root: "./data/clevr_hans3"
+  variant: "clevr_hans3"  # or "clevr_hans7"
+  batch_size: 128
+  num_workers: 32
+
+# Models to train
+models_to_train:
+  - quantum_kernel_svm
+  - hybrid_qcnn
+  - resnet18
+  - vit
+  - protopnet
+
+n_classes: 3  # 3 for clevr_hans3, 7 for clevr_hans7
+
+# ═══════════════════════════════════════════════════════════
+# Model-specific configs
+# ═══════════════════════════════════════════════════════════
+
+quantum_kernel:
+  n_qubits: 10
+  layers: 2
+
+qcnn:
+  n_qubits: 10
+  layers: 3
+  backend: "lightning.gpu"
+  conv_channels: [64, 128, 256]
+  hidden_sizes: [512, 256]
+  dropout: 0.4
+  training:
+    epochs: 100
+    learning_rate: 0.001
+    weight_decay: 0.0001
+    use_amp: true
+
+resnet18:
+  pretrained: true
+  freeze_backbone: false
+  training:
+    epochs: 50
+    learning_rate: 0.0001
+    weight_decay: 0.0001
+    use_amp: true
+
+vit:
+  pretrained: true
+  training:
+    epochs: 50
+    learning_rate: 0.00001
+    weight_decay: 0.0001
+    use_amp: true
+
+protopnet:
+  n_prototypes_per_class: 10
+  prototype_shape: [128, 1, 1]
+  backbone: "resnet18"
+  pretrained: true
+  training:
+    epochs_phase1: 20
+    epochs_phase3: 10
+    lr_features: 0.0001
+    lr_projection: 0.001
+    lr_prototypes: 0.01
+    lr_last: 0.001
+    lr_last_finetune: 0.0001

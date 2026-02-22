@@ -1,0 +1,58 @@
+# configs/explain_all_models.yaml
+
+experiment_name: "xai_comparative_clevr_hans3"
+
+dataset:
+  root: "./data/clevr_hans3"
+  variant: "clevr_hans3"
+  batch_size: 1
+  num_workers: 8
+
+n_classes: 3
+
+# Checkpoints
+checkpoints:
+  quantum_kernel_svm: "./checkpoints/quantum_kernel_svm.pkl"
+  hybrid_qcnn: "./checkpoints/qcnn_best.pth"
+  resnet18: "./checkpoints/resnet18_best.pth"
+  vit: "./checkpoints/vit_best.pth"
+  protopnet: "./checkpoints/protopnet_best.pth"
+
+# Models to explain
+models_to_explain:
+  - quantum_kernel_svm
+  - hybrid_qcnn
+  - resnet18
+  - vit
+  - protopnet
+
+# Model configs (needed for loading)
+qcnn:
+  n_qubits: 10
+  layers: 3
+  backend: "lightning.gpu"
+  conv_channels: [64, 128, 256]
+  hidden_sizes: [512, 256]
+
+# XAI methods to apply
+xai_methods:
+  integrated_gradients: true
+  gradcam: true
+  saliency: true
+  attention_rollout: true  # ViT only
+  kernel_shap: true  # Quantum Kernel only
+
+# Evaluation
+n_samples: 200
+output_dir: "./explanations/comparative_study"
+
+# Metrics to compute
+metrics:
+  - faithfulness_insertion
+  - faithfulness_deletion
+  - infidelity
+  - sparsity
+  - robustness
+  - rank_agreement
+  - top_k_overlap
+  - confounder_sensitivity
