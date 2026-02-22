@@ -1,21 +1,19 @@
-# ── Base image: PyTorch + CUDA 11.8 (cpu-only fallback still works) ──────────
+# ── Base image: PyTorch + CUDA 11.8 ─────────────────────────────────────────
 FROM pytorch/pytorch:2.2.0-cuda11.8-cudnn8-runtime
 
-# ── System deps ───────────────────────────────────────────────────────────────
+# ── System deps (single layer, minimal) ─────────────────────────────────────
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        git \
-        libgl1 \
-        libglib2.0-0 \
+        git libgl1 libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
-# ── Python deps ───────────────────────────────────────────────────────────────
 WORKDIR /app
 
+# ── Python deps (cached unless requirements.txt changes) ────────────────────
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# ── Project source ────────────────────────────────────────────────────────────
+# ── Project source ──────────────────────────────────────────────────────────
 COPY . .
 
-# ── Default command (override at runtime) ────────────────────────────────────
-CMD ["python", "train_clevr_hans.py", "--config", "configs/clevr_hans.yaml"]
+# ── Default: interactive shell (override via docker-compose) ────────────────
+CMD ["bash"]
