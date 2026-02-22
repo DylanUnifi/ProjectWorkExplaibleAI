@@ -113,6 +113,9 @@ class SHAPExplainer:
                     shap_vals = shap_values
                 
                 return torch.from_numpy(shap_vals)
+
+        # Should not reach here due to __init__ validation
+        raise ValueError(f"Unknown method: {self.method}")
     
     def explain_batch(self, dataloader, max_batches=10):
         """Explain multiple batches."""

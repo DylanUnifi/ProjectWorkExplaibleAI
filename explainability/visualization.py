@@ -4,7 +4,6 @@ import torch
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
-from matplotlib import cm
 import imageio
 
 def visualize_video_explanation(
@@ -42,7 +41,7 @@ def visualize_video_explanation(
         frame_uint8 = (frame * 255).astype(np.uint8)
         
         # Apply colormap to attribution
-        heatmap = cm.get_cmap("jet")(attr)[:, :, :3]  # (H, W, 3)
+        heatmap = plt.colormaps["jet"](attr)[:, :, :3]  # (H, W, 3)
         heatmap = (heatmap * 255).astype(np.uint8)
         
         # Overlay
