@@ -52,7 +52,7 @@ class LIMEExplainer:
             mask: Binary mask of important regions
         """
         # Convert to numpy (H, W, C) [0, 255]
-        img_np = (image.permute(1, 2, 0).cpu().numpy() * 255).astype(np.uint8)
+        img_np = (image.permute(1, 2, 0).detach().cpu().numpy() * 255).astype(np.uint8)
         
         # Explain
         explanation = self.explainer.explain_instance(
@@ -76,7 +76,7 @@ class LIMEExplainer:
     
     def visualize(self, image, explanation, save_path=None):
         """Visualize LIME explanation."""
-        img_np = (image.permute(1, 2, 0).cpu().numpy() * 255).astype(np.uint8)
+        img_np = (image.permute(1, 2, 0).detach().cpu().numpy() * 255).astype(np.uint8)
         
         temp, mask = explanation.get_image_and_mask(
             explanation.top_labels[0],
