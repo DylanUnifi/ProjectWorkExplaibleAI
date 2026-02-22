@@ -5,7 +5,7 @@ model:
   checkpoint: "./checkpoints/clevr_hans/clevr_qcnn_confounder/best_model.pth"
 
 dataset:
-  root: "./data/clevr_hans3"
+  root: "./data/CLEVR-Hans3"
   variant: "clevr_hans3"
 
 quantum:
