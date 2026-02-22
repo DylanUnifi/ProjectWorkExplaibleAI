@@ -118,25 +118,15 @@ def explain_clevr_hans(config):
             print("attr shape:", attr.shape, attr.dtype, attr.device)
             print("label:", label, type(label))
             # Ensure attribution is BCHW float32 on same device as image
+            if not isinstance(attr, torch.Tensor):
+                attr = torch.tensor(np.array(attr), dtype=torch.float32)
+            attr = attr.detach().to(device=image.device, dtype=torch.float32)
             if attr.dim() == 5:
-                # likely BHWC or BCHW with extra dim -> reduce last dim
-                attr = attr.mean(dim=-1)
-            if attr.dim() == 3:
-                attr = attr.unsqueeze(0)
-            attr = attr.to(device=image.device, dtype=torch.float32)
-            # normalize attr to BCHW float32 on cuda
-            attr = torch.as_tensor(attr)
-            if attr.dim() == 5:
-                # most likely (B,C,H,W,classes) -> pick target class
+                # (B, C, H, W, n_classes) -> pick target class
                 tc = int(label.item()) if hasattr(label, "item") else int(label)
                 attr = attr[..., tc]
-            if attr.dim() == 4 and attr.shape[-1] in (1, 3):  # BHWC -> BCHW
-                # if last dim looks like channels, permute
-                # (this is a heuristic; safer to do in shap_explainer)
-                pass
             if attr.dim() == 3:
                 attr = attr.unsqueeze(0)
-            attr = attr.to(device=image.device, dtype=torch.float32)
             #metrics = xai_metrics.evaluate_all(image, attr, target=label)
             
             # Store results

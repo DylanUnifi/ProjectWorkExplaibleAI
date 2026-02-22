@@ -83,11 +83,22 @@ class SHAPExplainer:
                             preds = preds[0]
                         target_class = preds.argmax(dim=1).cpu().numpy()
 
-                shap_vals = np.array([shap_values[tc][i] for i, tc in enumerate(target_class)])
+                tc_list = [int(tc) for tc in (target_class if hasattr(target_class, '__iter__') else [target_class])]
+                shap_vals = np.array([shap_values[tc][i] for i, tc in enumerate(tc_list)])
             else:
                 shap_vals = shap_values
+                # Handle ndarray with trailing class dimension, e.g. (B, C, H, W, n_classes)
+                if isinstance(shap_vals, np.ndarray) and shap_vals.ndim == x.ndim + 1:
+                    if target_class is None:
+                        with torch.no_grad():
+                            preds = self.model(x)
+                            if isinstance(preds, tuple):
+                                preds = preds[0]
+                            target_class = preds.argmax(dim=1).cpu().numpy()
+                    tc_list = [int(tc) for tc in (target_class if hasattr(target_class, '__iter__') else [target_class])]
+                    shap_vals = np.stack([shap_vals[i, ..., tc] for i, tc in enumerate(tc_list)])
 
-            return torch.from_numpy(shap_vals)
+            return torch.from_numpy(np.ascontiguousarray(shap_vals).astype(np.float32)).to(self.device)
         
         elif self.method == "kernel":
             with torch.no_grad():
@@ -100,15 +111,22 @@ class SHAPExplainer:
                     if isinstance(preds, tuple):
                         preds = preds[0]
                     target_class = preds.argmax(dim=1).cpu().numpy()
-                
-                shap_vals = np.array([
-                    shap_values[tc][i]
-                    for i, tc in enumerate(target_class)
-                ])
+
+                tc_list = [int(tc) for tc in (target_class if hasattr(target_class, '__iter__') else [target_class])]
+                shap_vals = np.array([shap_values[tc][i] for i, tc in enumerate(tc_list)])
             else:
                 shap_vals = shap_values
-            
-            return torch.from_numpy(shap_vals)
+                # Handle ndarray with trailing class dimension, e.g. (B, C, H, W, n_classes)
+                if isinstance(shap_vals, np.ndarray) and shap_vals.ndim == x.ndim + 1:
+                    if target_class is None:
+                        preds = self.model(x)
+                        if isinstance(preds, tuple):
+                            preds = preds[0]
+                        target_class = preds.argmax(dim=1).cpu().numpy()
+                    tc_list = [int(tc) for tc in (target_class if hasattr(target_class, '__iter__') else [target_class])]
+                    shap_vals = np.stack([shap_vals[i, ..., tc] for i, tc in enumerate(tc_list)])
+
+            return torch.from_numpy(np.ascontiguousarray(shap_vals).astype(np.float32)).to(self.device)
 
         # Should not reach here due to __init__ validation
         raise ValueError(f"Unknown method: {self.method}")
