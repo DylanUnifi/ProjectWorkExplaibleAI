@@ -128,6 +128,7 @@ class CLEVRQCNNClassifier(nn.Module):
             n_qubits = x_quantum.numel() // batch_size
             x_quantum = x_quantum.reshape(batch_size, n_qubits)
         x_quantum = x_quantum.to(target_device)
+        x_quantum = self.bn_q(x_quantum)
 
         # Multi-class logits (no sigmoid — use CrossEntropyLoss)
         logits = self.final_fc(x_quantum)
