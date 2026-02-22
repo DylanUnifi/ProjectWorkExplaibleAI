@@ -99,7 +99,11 @@ class TemporalQCNN(nn.Module):
             return tuple(qml.expval(qml.PauliZ(i)) for i in range(n_qubits))
         
         weight_shapes = {"weights": (n_layers, n_qubits, 3)}
-        return qml.qnn.TorchLayer(qnode, weight_shapes)
+        layer = qml.qnn.TorchLayer(qnode, weight_shapes)
+        for name, param in layer.named_parameters():
+            if "weights" in name:
+                nn.init.uniform_(param, -np.pi / 2, np.pi / 2)
+        return layer
     
     def forward(self, x, return_features=False):
         """
@@ -122,23 +126,24 @@ class TemporalQCNN(nn.Module):
         # Classical head
         x = self.classical_head(x)  # (B, hidden)
         
-        # Quantum layer
-        x_quantum_input = torch.tanh(self.quantum_fc(x)) * np.pi
+        # Quantum layer with residual connection
+        x_proj = self.quantum_fc(x)
+        x_quantum_input = torch.tanh(x_proj) * np.pi
+        
         batch_size = x_quantum_input.shape[0]
+        n_q = self.quantum_fc.out_features
         x_quantum = self.quantum_layer(x_quantum_input)
-        # PennyLane v0.44+ may return flat tensor; reshape to (batch, n_qubits)
-        if x_quantum.dim() == 1:
-            x_quantum = x_quantum.unsqueeze(0)
-        if x_quantum.shape[0] != batch_size:
-            n_qubits_out = x_quantum.numel() // batch_size
-            x_quantum = x_quantum.reshape(batch_size, n_qubits_out)
-        x_quantum = self.bn_quantum(x_quantum)
+        x_quantum = x_quantum.reshape(batch_size, n_q)
+        
+        # Residual: classical projection + quantum output
+        x_combined = x_proj + x_quantum
+        x_combined = self.bn_quantum(x_combined)
         
         # Multi-task outputs
-        action_logits = self.action_head(x_quantum)
-        explanation_logits = self.explanation_head(x_quantum)
+        action_logits = self.action_head(x_combined)
+        explanation_logits = self.explanation_head(x_combined)
         
         if return_features:
-            return action_logits, explanation_logits, x_quantum
+            return action_logits, explanation_logits, x_combined
         
         return action_logits, explanation_logits
