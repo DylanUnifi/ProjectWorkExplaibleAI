@@ -33,8 +33,8 @@ class GradientExplainer:
         # GradCAM requires target layer
         self.gradcam_layer = self._find_last_conv_layer()
         if self.gradcam_layer:
-            self.gradcam = LayerGradCam(model, self.gradcam_layer)
-            self.guided_gradcam = GuidedGradCam(model, self.gradcam_layer)
+            self._gradcam_attr = LayerGradCam(model, self.gradcam_layer)
+            self._guided_gradcam_attr = GuidedGradCam(model, self.gradcam_layer)
     
     def _find_last_conv_layer(self):
         """Find last convolutional layer for GradCAM."""
@@ -112,7 +112,7 @@ class GradientExplainer:
                     output = output[0]
                 target = output.argmax(dim=1)
         
-        attributions = self.gradcam.attribute(x, target=target, relu_attributions=relu)
+        attributions = self._gradcam_attr.attribute(x, target=target, relu_attributions=relu)
         
         # Upsample to input size
         if attributions.dim() == 4:  # (B, 1, H', W')
@@ -146,7 +146,7 @@ class GradientExplainer:
                     output = output[0]
                 target = output.argmax(dim=1)
         
-        attributions = self.guided_gradcam.attribute(x, target=target)
+        attributions = self._guided_gradcam_attr.attribute(x, target=target)
         return attributions
     
     def explain_all(self, x, target=None):
