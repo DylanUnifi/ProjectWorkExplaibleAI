@@ -102,7 +102,7 @@ class SHAPExplainer:
         
         elif self.method == "kernel":
             with torch.no_grad():
-                x_np = x.cpu().numpy()
+                x_np = x.detach().cpu().numpy()
             shap_values = self.explainer.shap_values(x_np, nsamples=100)
             
             if isinstance(shap_values, list):

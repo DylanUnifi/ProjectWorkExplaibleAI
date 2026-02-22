@@ -25,8 +25,8 @@ def visualize_video_explanation(
         prediction: Predicted class
         fps: Frames per second
     """
-    video = video[0].permute(1, 2, 3, 0).cpu().numpy()  # (T, H, W, C)
-    attribution = attribution[0].abs().sum(dim=0).cpu().numpy()  # (T, H, W)
+    video = video[0].permute(1, 2, 3, 0).detach().cpu().numpy()  # (T, H, W, C)
+    attribution = attribution[0].abs().sum(dim=0).detach().cpu().numpy()  # (T, H, W)
     
     # Normalize attribution
     attr_normalized = (attribution - attribution.min()) / (attribution.max() - attribution.min() + 1e-8)
@@ -87,7 +87,7 @@ def plot_attribution_comparison(
     fig, axes = plt.subplots(2, n_methods + 1, figsize=(4*(n_methods+1), 8))
     
     # Original image
-    img_np = image.permute(1, 2, 0).cpu().numpy()
+    img_np = image.permute(1, 2, 0).detach().cpu().numpy()
     img_np = (img_np - img_np.min()) / (img_np.max() - img_np.min())
     
     axes[0, 0].imshow(img_np)
@@ -104,7 +104,7 @@ def plot_attribution_comparison(
     # Plot each attribution method
     for idx, (method_name, attr) in enumerate(attributions_dict.items(), start=1):
         # Positive attributions
-        attr_pos = attr.sum(dim=0).cpu().numpy()  # Sum over channels
+        attr_pos = attr.sum(dim=0).detach().cpu().numpy()  # Sum over channels
         attr_pos = np.maximum(attr_pos, 0)
         attr_pos = (attr_pos - attr_pos.min()) / (attr_pos.max() - attr_pos.min() + 1e-8)
         
@@ -115,7 +115,7 @@ def plot_attribution_comparison(
         plt.colorbar(im, ax=axes[0, idx], fraction=0.046)
         
         # Negative attributions
-        attr_neg = attr.sum(dim=0).cpu().numpy()
+        attr_neg = attr.sum(dim=0).detach().cpu().numpy()
         attr_neg = np.minimum(attr_neg, 0)
         attr_neg = (attr_neg - attr_neg.min()) / (attr_neg.max() - attr_neg.min() + 1e-8)
         

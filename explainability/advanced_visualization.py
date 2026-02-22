@@ -41,7 +41,7 @@ def plot_comparison_grid(image, explanations_dict, save_path, ground_truth=None)
     
     # Original image
     ax = fig.add_subplot(gs[0, :2])
-    img_np = image.permute(1, 2, 0).cpu().numpy()
+    img_np = image.permute(1, 2, 0).detach().cpu().numpy()
     img_np = (img_np - img_np.min()) / (img_np.max() - img_np.min())
     ax.imshow(img_np)
     ax.set_title("Original Image", fontsize=14, fontweight="bold")
@@ -51,7 +51,7 @@ def plot_comparison_grid(image, explanations_dict, save_path, ground_truth=None)
     if ground_truth is not None:
         ax = fig.add_subplot(gs[0, 2:4])
         ax.imshow(img_np)
-        ax.imshow(ground_truth.cpu().numpy(), cmap="hot", alpha=0.5)
+        ax.imshow(ground_truth.detach().cpu().numpy(), cmap="hot", alpha=0.5)
         ax.set_title("Ground Truth", fontsize=14, fontweight="bold")
         ax.axis("off")
     
@@ -63,7 +63,7 @@ def plot_comparison_grid(image, explanations_dict, save_path, ground_truth=None)
         ax = fig.add_subplot(gs[row, col])
         
         # Aggregate attribution
-        attr_agg = attr.abs().sum(dim=0).cpu().numpy()
+        attr_agg = attr.abs().sum(dim=0).detach().cpu().numpy()
         attr_agg = (attr_agg - attr_agg.min()) / (attr_agg.max() - attr_agg.min() + 1e-8)
         
         # Overlay on image

@@ -420,7 +420,7 @@ class PaperFigureGenerator:
             # Column 0: Original image (only in first row)
             if i == 0:
                 ax = fig.add_subplot(gs[i, 0])
-                img_np = image.permute(1, 2, 0).cpu().numpy()
+                img_np = image.permute(1, 2, 0).detach().cpu().numpy()
                 img_np = (img_np - img_np.min()) / (img_np.max() - img_np.min())
                 ax.imshow(img_np)
                 ax.set_title("Original", fontsize=12, fontweight="bold")
@@ -447,9 +447,9 @@ class PaperFigureGenerator:
                     
                     # Aggregate attribution
                     if attr.dim() == 4:
-                        attr_agg = attr[0].abs().sum(dim=0).cpu().numpy()
+                        attr_agg = attr[0].abs().sum(dim=0).detach().cpu().numpy()
                     else:
-                        attr_agg = attr.abs().cpu().numpy()
+                        attr_agg = attr.abs().detach().cpu().numpy()
                     
                     # Normalize
                     attr_agg = (attr_agg - attr_agg.min()) / (attr_agg.max() - attr_agg.min() + 1e-8)
@@ -714,8 +714,8 @@ class PaperFigureGenerator:
                         attr2 = sample["explanations"][model2][meth2]
                         
                         # Flatten and compute correlation
-                        attr1_flat = attr1.abs().flatten().cpu().numpy()
-                        attr2_flat = attr2.abs().flatten().cpu().numpy()
+                        attr1_flat = attr1.abs().flatten().detach().cpu().numpy()
+                        attr2_flat = attr2.abs().flatten().detach().cpu().numpy()
                         
                         if len(attr1_flat) == len(attr2_flat):
                             corr, _ = stats.spearmanr(attr1_flat, attr2_flat)
@@ -782,7 +782,7 @@ class PaperFigureGenerator:
             
             # Original image
             ax = fig.add_subplot(gs[case_idx, 0])
-            img_np = image.permute(1, 2, 0).cpu().numpy()
+            img_np = image.permute(1, 2, 0).detach().cpu().numpy()
             img_np = (img_np - img_np.min()) / (img_np.max() - img_np.min())
             ax.imshow(img_np)
             ax.set_title(title, fontsize=14, fontweight="bold")
@@ -801,7 +801,7 @@ class PaperFigureGenerator:
                     ax = fig.add_subplot(gs[case_idx, model_idx+1])
                     
                     attr = methods[method_name]
-                    attr_agg = attr.abs().sum(dim=0).cpu().numpy() if attr.dim() > 2 else attr.abs().cpu().numpy()
+                    attr_agg = attr.abs().sum(dim=0).detach().cpu().numpy() if attr.dim() > 2 else attr.abs().detach().cpu().numpy()
                     attr_agg = (attr_agg - attr_agg.min()) / (attr_agg.max() - attr_agg.min() + 1e-8)
                     
                     ax.imshow(img_np)
