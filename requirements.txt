@@ -6,6 +6,11 @@ wandb
 tensorboard
 
 # Data & vision
+# ── Experiment tracking ──────────────────────────────────────
+wandb
+tensorboard
+
+# ── Data & vision ────────────────────────────────────────────
 opencv-python-headless
 matplotlib
 tqdm
@@ -24,4 +29,12 @@ imageio
 imageio-ffmpeg
 
 # Quantum
+pennylane
+
+# ── Explainability ───────────────────────────────────────────
+captum
+shap
+lime
+
+# ── Quantum ──────────────────────────────────────────────────
 pennylane
