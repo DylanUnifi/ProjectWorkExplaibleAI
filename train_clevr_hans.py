@@ -14,11 +14,13 @@ import wandb
 
 from data_loader.clevr_hans_loader import get_clevr_hans_loaders
 from models.clevr_qcnn import CLEVRQCNNClassifier
+from utils.device import get_device
+
 
 def train_clevr_hans(config):
     """Train QCNN on CLEVR-Hans dataset."""
     
-    DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    DEVICE = get_device()
     EXPERIMENT_NAME = f"clevr_hans_{config['experiment_name']}"
     SAVE_DIR = os.path.join("checkpoints", "clevr_hans", EXPERIMENT_NAME)
     os.makedirs(SAVE_DIR, exist_ok=True)
@@ -56,7 +58,7 @@ def train_clevr_hans(config):
     )
     
     # Multi-GPU
-    if torch.cuda.device_count() > 1:
+    if DEVICE.type == "cuda" and torch.cuda.device_count() > 1:
         model = nn.DataParallel(model)
     
     model = model.to(DEVICE)
@@ -76,7 +78,7 @@ def train_clevr_hans(config):
     criterion = nn.CrossEntropyLoss()
     
     # AMP
-    scaler = torch.cuda.amp.GradScaler() if config["training"].get("use_amp", True) else None
+    scaler = torch.cuda.amp.GradScaler() if (DEVICE.type == "cuda" and config["training"].get("use_amp", True)) else None
     
     # Training loop (similaire à BDD-OIA)
     best_val_acc = 0

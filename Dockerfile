@@ -1,5 +1,5 @@
-# ── Base image: PyTorch + CUDA 11.8 ─────────────────────────────────────────
-FROM pytorch/pytorch:2.2.0-cuda11.8-cudnn8-runtime
+# ── Base image: PyTorch 2.7 + CUDA 12.8 (Blackwell sm_120 support) ──────────
+FROM pytorch/pytorch:2.7.0-cuda12.8-cudnn9-runtime
 
 # ── System deps (single layer, minimal) ─────────────────────────────────────
 RUN apt-get update && apt-get install -y --no-install-recommends \

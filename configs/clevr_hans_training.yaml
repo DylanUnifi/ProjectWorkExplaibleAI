@@ -16,7 +16,7 @@ quantum:
   backend: "lightning.qubit"
 
 training:
-  batch_size: 128             # ✅ Images plus petites
+  batch_size: 32              # ✅ Images plus petites
   epochs: 100
   learning_rate: 0.001
   weight_decay: 0.0001

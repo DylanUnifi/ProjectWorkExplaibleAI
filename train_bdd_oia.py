@@ -13,12 +13,14 @@ from data_loader.bdd_oia_loader import get_bdd_oia_loaders
 from models.temporal_qcnn import TemporalQCNN
 from utils.checkpoint import save_checkpoint, safe_load_checkpoint
 from utils.early_stopping import EarlyStopping
+from utils.device import get_device
+
 
 def train_bdd_oia(config):
     """Train Temporal QCNN on BDD-OIA dataset."""
     
     # Setup
-    DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    DEVICE = get_device()
     EXPERIMENT_NAME = f"bdd_oia_{config['experiment_name']}"
     SAVE_DIR = os.path.join("checkpoints", "bdd_oia", EXPERIMENT_NAME)
     os.makedirs(SAVE_DIR, exist_ok=True)
@@ -55,7 +57,7 @@ def train_bdd_oia(config):
     )
     
     # Multi-GPU
-    if torch.cuda.device_count() > 1:
+    if DEVICE.type == "cuda" and torch.cuda.device_count() > 1:
         print(f"🚀 Using {torch.cuda.device_count()} GPUs")
         model = nn.DataParallel(model)
     
@@ -81,7 +83,7 @@ def train_bdd_oia(config):
     
     # Mixed precision
     use_amp = config["training"].get("use_amp", True)
-    scaler = torch.cuda.amp.GradScaler() if use_amp else None
+    scaler = torch.cuda.amp.GradScaler() if (DEVICE.type == "cuda" and use_amp) else None
     
     # Early stopping
     early_stopping = EarlyStopping(patience=config["training"]["early_stopping"])
