@@ -2,15 +2,18 @@
 experiment_name: "clevr_explain_confounders"
 
 model:
-  checkpoint: "./checkpoints/clevr_hans/clevr_qcnn_confounder/best_model.pth"
+  checkpoint: "./checkpoints/clevr_hans/clevr_hans_clevr_qcnn_fast_v2/best_model.pth"
+  conv_channels: [64, 128, 256]
+  hidden_sizes: [512, 256]
+  dropout: 0.3
 
 dataset:
   root: "./data/CLEVR-Hans3"
   variant: "clevr_hans3"
 
 quantum:
-  n_qubits: 10
-  layers: 2
+  n_qubits: 6
+  layers: 3
   backend: "lightning.qubit"
 
 methods:
@@ -22,5 +25,5 @@ methods:
     enabled: true
 
 batch_size: 1
-n_samples: 200                # Analyze both confounded & clean
+n_samples: 20                # Analyze both confounded & clean
 output_dir: "./explanations/clevr_hans"

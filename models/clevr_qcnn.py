@@ -27,7 +27,7 @@ class ResidualBlock(nn.Module):
         identity = self.downsample(x)
         out = F.relu(self.bn1(self.conv1(x)))
         out = self.bn2(self.conv2(out))
-        out += identity
+        out = out + identity
         return F.relu(out)
 
 

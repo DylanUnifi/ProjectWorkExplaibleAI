@@ -17,8 +17,8 @@ quantum:
 training:
   batch_size: 64
   epochs: 100
-  learning_rate: 0.003
-  weight_decay: 0.00001
+  learning_rate: 0.0015
+  weight_decay: 0.00005
   early_stopping: 20
   num_workers: 8
   use_amp: true

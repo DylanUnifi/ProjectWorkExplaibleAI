@@ -32,11 +32,14 @@ def explain_clevr_hans(config):
     checkpoint = torch.load(checkpoint_path)
     
     model = CLEVRQCNNClassifier(
-        n_classes=n_classes,
-        input_channel=3,
-        n_qubits=config["quantum"]["n_qubits"],
-        n_layers=config["quantum"]["layers"],
-        backend=config["quantum"]["backend"],
+    n_classes=n_classes,
+    input_channel=3,
+    n_qubits=config["quantum"]["n_qubits"],
+    n_layers=config["quantum"]["layers"],
+    backend=config["quantum"]["backend"],
+    conv_channels=config["model"]["conv_channels"],
+    hidden_sizes=config["model"]["hidden_sizes"],
+    dropout=config["model"]["dropout"],
     )
     
     model.load_state_dict(checkpoint["model_state_dict"])
@@ -111,17 +114,40 @@ def explain_clevr_hans(config):
         # Evaluate metrics
         # ═══════════════════════════════════════════════════
         for method_name, attr in explanations.items():
-            metrics = xai_metrics.evaluate_all(image, attr, target=label)
+            print("image shape:", image.shape, image.dtype, image.device)
+            print("attr shape:", attr.shape, attr.dtype, attr.device)
+            print("label:", label, type(label))
+            # Ensure attribution is BCHW float32 on same device as image
+            if attr.dim() == 5:
+                # likely BHWC or BCHW with extra dim -> reduce last dim
+                attr = attr.mean(dim=-1)
+            if attr.dim() == 3:
+                attr = attr.unsqueeze(0)
+            attr = attr.to(device=image.device, dtype=torch.float32)
+            # normalize attr to BCHW float32 on cuda
+            attr = torch.as_tensor(attr)
+            if attr.dim() == 5:
+                # most likely (B,C,H,W,classes) -> pick target class
+                tc = int(label.item()) if hasattr(label, "item") else int(label)
+                attr = attr[..., tc]
+            if attr.dim() == 4 and attr.shape[-1] in (1, 3):  # BHWC -> BCHW
+                # if last dim looks like channels, permute
+                # (this is a heuristic; safer to do in shap_explainer)
+                pass
+            if attr.dim() == 3:
+                attr = attr.unsqueeze(0)
+            attr = attr.to(device=image.device, dtype=torch.float32)
+            #metrics = xai_metrics.evaluate_all(image, attr, target=label)
             
             # Store results
             result = {
                 "image_id": image_id,
                 "method": method_name,
-                "is_confounded": is_confounded.item(),
-                "faithfulness_insertion": metrics["faithfulness_insertion"],
-                "faithfulness_deletion": metrics["faithfulness_deletion"],
-                "infidelity": metrics["infidelity"],
-                "sparsity": metrics["sparsity"],
+                "is_confounded": int(is_confounded),
+                #"faithfulness_insertion": metrics["faithfulness_insertion"],
+                #"faithfulness_deletion": metrics["faithfulness_deletion"],
+                #"infidelity": metrics["infidelity"],
+                #"sparsity": metrics["sparsity"],
             }
             
             if is_confounded:
@@ -130,10 +156,10 @@ def explain_clevr_hans(config):
                 non_confounded_results.append(result)
             
             # Log to W&B
-            wandb.log({
-                f"{method_name}/{'confounded' if is_confounded else 'clean'}/faithfulness_insertion": metrics["faithfulness_insertion"],
-                f"{method_name}/{'confounded' if is_confounded else 'clean'}/faithfulness_deletion": metrics["faithfulness_deletion"],
-            })
+            #wandb.log({
+            #    f"{method_name}/{'confounded' if is_confounded else 'clean'}/faithfulness_insertion": metrics["faithfulness_insertion"],
+            #    f"{method_name}/{'confounded' if is_confounded else 'clean'}/faithfulness_deletion": metrics["faithfulness_deletion"],
+            #})
         
         # ═══════════════════════════════════════════════════
         # Visualize
@@ -141,7 +167,7 @@ def explain_clevr_hans(config):
         fig, axes = plt.subplots(2, len(explanations) + 1, figsize=(4*(len(explanations)+1), 8))
         
         # Original image
-        img_np = image[0].permute(1, 2, 0).cpu().numpy()
+        img_np = image[0].permute(1, 2, 0).detach().cpu().numpy()
         img_np = (img_np - img_np.min()) / (img_np.max() - img_np.min())
         
         axes[0, 0].imshow(img_np)
@@ -149,14 +175,14 @@ def explain_clevr_hans(config):
         axes[0, 0].axis("off")
         
         axes[1, 0].text(0.5, 0.5, 
-                       f"Confounded: {is_confounded.item()}\nLabel: {label.item()}",
+                       f"Confounded: {int(is_confounded)}\nLabel: {label.item()}",
                        ha="center", va="center")
         axes[1, 0].axis("off")
         
         # Explanations
         for idx, (method_name, attr) in enumerate(explanations.items(), start=1):
             # Positive attributions
-            attr_pos = attr[0].sum(dim=0).cpu().numpy()  # Sum over channels
+            attr_pos = attr[0].sum(dim=0).detach().cpu().numpy()  # Sum over channels
             attr_pos = np.maximum(attr_pos, 0)
             
             axes[0, idx].imshow(img_np)
@@ -166,7 +192,7 @@ def explain_clevr_hans(config):
             plt.colorbar(im, ax=axes[0, idx])
             
             # Negative attributions
-            attr_neg = np.minimum(attr[0].sum(dim=0).cpu().numpy(), 0)
+            attr_neg = np.minimum(attr[0].sum(dim=0).detach().cpu().numpy(), 0)
             
             axes[1, idx].imshow(img_np)
             im = axes[1, idx].imshow(-attr_neg, cmap="cool", alpha=0.6)

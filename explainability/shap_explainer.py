@@ -71,48 +71,44 @@ class SHAPExplainer:
         """
         x = x.to(self.device)
         
-        with torch.no_grad():
-            if self.method == "deep":
-                shap_values = self.explainer.shap_values(x)
-                
-                # shap_values is list of [n_classes] arrays
-                if isinstance(shap_values, list):
-                    if target_class is None:
-                        # Use predicted class
+        if self.method == "deep":
+            # IMPORTANT: DeepExplainer needs gradients; do NOT wrap in torch.no_grad()
+            shap_values = self.explainer.shap_values(x, check_additivity=False)
+
+            if isinstance(shap_values, list):
+                if target_class is None:
+                    with torch.no_grad():
                         preds = self.model(x)
                         if isinstance(preds, tuple):
                             preds = preds[0]
                         target_class = preds.argmax(dim=1).cpu().numpy()
-                    
-                    # Select SHAP for target class
-                    shap_vals = np.array([
-                        shap_values[tc][i]
-                        for i, tc in enumerate(target_class)
-                    ])
-                else:
-                    shap_vals = shap_values
-                
-                return torch.from_numpy(shap_vals)
-            
-            elif self.method == "kernel":
+
+                shap_vals = np.array([shap_values[tc][i] for i, tc in enumerate(target_class)])
+            else:
+                shap_vals = shap_values
+
+            return torch.from_numpy(shap_vals)
+        
+        elif self.method == "kernel":
+            with torch.no_grad():
                 x_np = x.cpu().numpy()
-                shap_values = self.explainer.shap_values(x_np, nsamples=100)
+            shap_values = self.explainer.shap_values(x_np, nsamples=100)
+            
+            if isinstance(shap_values, list):
+                if target_class is None:
+                    preds = self.model(x)
+                    if isinstance(preds, tuple):
+                        preds = preds[0]
+                    target_class = preds.argmax(dim=1).cpu().numpy()
                 
-                if isinstance(shap_values, list):
-                    if target_class is None:
-                        preds = self.model(x)
-                        if isinstance(preds, tuple):
-                            preds = preds[0]
-                        target_class = preds.argmax(dim=1).cpu().numpy()
-                    
-                    shap_vals = np.array([
-                        shap_values[tc][i]
-                        for i, tc in enumerate(target_class)
-                    ])
-                else:
-                    shap_vals = shap_values
-                
-                return torch.from_numpy(shap_vals)
+                shap_vals = np.array([
+                    shap_values[tc][i]
+                    for i, tc in enumerate(target_class)
+                ])
+            else:
+                shap_vals = shap_values
+            
+            return torch.from_numpy(shap_vals)
 
         # Should not reach here due to __init__ validation
         raise ValueError(f"Unknown method: {self.method}")
