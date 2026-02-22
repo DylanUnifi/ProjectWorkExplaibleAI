@@ -1,0 +1,26 @@
+# configs/clevr_hans_explain.yaml
+experiment_name: "clevr_explain_confounders"
+
+model:
+  checkpoint: "./checkpoints/clevr_hans/clevr_qcnn_confounder/best_model.pth"
+
+dataset:
+  root: "./data/clevr_hans3"
+  variant: "clevr_hans3"
+
+quantum:
+  n_qubits: 10
+  layers: 2
+  backend: "lightning.gpu"
+
+methods:
+  shap:
+    enabled: true
+    method: "deep"
+  
+  gradient:
+    enabled: true
+
+batch_size: 1
+n_samples: 200                # Analyze both confounded & clean
+output_dir: "./explanations/clevr_hans"

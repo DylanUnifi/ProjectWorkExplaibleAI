@@ -1,0 +1,25 @@
+# configs/clevr_hans_training.yaml
+experiment_name: "clevr_qcnn_confounder"
+
+dataset:
+  root: "./data/clevr_hans3"
+  variant: "clevr_hans3"      # or "clevr_hans7"
+
+model:
+  conv_channels: [64, 128, 256]
+  hidden_sizes: [512, 256]
+  dropout: 0.4
+
+quantum:
+  n_qubits: 10
+  layers: 2
+  backend: "lightning.gpu"
+
+training:
+  batch_size: 128             # ✅ Images plus petites
+  epochs: 100
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  early_stopping: 15
+  num_workers: 32
+  use_amp: true

@@ -1,0 +1,29 @@
+# configs/bdd_oia_explain.yaml
+experiment_name: "bdd_explain_all_methods"
+
+model:
+  checkpoint: "./checkpoints/bdd_oia/temporal_qcnn_blackwell/best_model.pth"
+
+dataset:
+  root: "./data/bdd_oia"
+  n_frames: 16
+
+quantum:
+  n_qubits: 8
+  layers: 3
+  backend: "lightning.gpu"
+
+methods:
+  shap:
+    enabled: true
+    method: "deep"            # "deep" or "kernel"
+  
+  lime:
+    enabled: false            # Slow for videos
+  
+  gradient:
+    enabled: true             # IG, Saliency, GradCAM
+
+batch_size: 1
+n_samples: 100                # Number of videos to explain
+output_dir: "./explanations/bdd_oia"
