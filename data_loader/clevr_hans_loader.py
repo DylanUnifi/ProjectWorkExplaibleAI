@@ -48,15 +48,15 @@ class CLEVRHansDataset(Dataset):
 
     Supports the official download structure:
     CLEVR-Hans3/
-    ├── train/
-    │   ├── images/
-    │   └── scenes/
-    ├── val/
-    │   ├── images/
-    │   └── scenes/
-    └── test/
-        ├── images/
-        └── scenes/
+    +-- train/
+    |   +-- images/
+    |   +-- scenes/
+    +-- val/
+    |   +-- images/
+    |   +-- scenes/
+    +-- test/
+        +-- images/
+        +-- scenes/
     """
 
     def __init__(
@@ -76,25 +76,17 @@ class CLEVRHansDataset(Dataset):
         # Number of classes
         self.n_classes = 3 if variant == "clevr_hans3" else 7
 
-        # Load scenes — official structure: {root}/{split}/scenes/
+        # Load scenes -- official structure: {root}/{split}/scenes/
         scenes_dir = self.root_dir / split / "scenes"
         self.scenes = []
 
         if scenes_dir.is_dir():
-            # Official download: directory with per-image JSON or single JSON
             scene_files = sorted(scenes_dir.glob("*.json"))
-            if len(scene_files) == 0:
-                raise FileNotFoundError(
-                    f"No JSON scene files found in {scenes_dir}. "
-                    "Please check your dataset directory structure."
-                )
-            elif len(scene_files) == 1:
-                # Single scene file for the split
+            if len(scene_files) == 1:
                 with open(scene_files[0], "r") as f:
                     data = json.load(f)
                     self.scenes = data.get("scenes", data)
             else:
-                # Multiple scene files — load and merge
                 for sf in scene_files:
                     with open(sf, "r") as f:
                         data = json.load(f)
@@ -105,23 +97,21 @@ class CLEVRHansDataset(Dataset):
                         else:
                             self.scenes.append(data)
         else:
-            # Fallback: old structure {root}/scenes/{split}_scenes.json
             fallback_path = self.root_dir / "scenes" / f"{split}_scenes.json"
             with open(fallback_path, "r") as f:
                 data = json.load(f)
                 self.scenes = data.get("scenes", data)
 
-        # Images directory — official: {root}/{split}/images/
+        # Images directory
         self.images_dir = self.root_dir / split / "images"
         if not self.images_dir.is_dir():
-            # Fallback: old structure {root}/images/{split}/
             self.images_dir = self.root_dir / "images" / split
 
-        # Confounder info (built-in, no external file needed)
+        # Confounder info (built-in)
         if return_confounders:
             self.confounders = CLEVR_HANS_CONFOUNDERS.get(variant, {})
 
-        print(f"🧩 CLEVR-Hans{self.n_classes} {split}: {len(self.scenes)} images")
+        print(f"CLEVR-Hans{self.n_classes} {split}: {len(self.scenes)} images")
 
     def __len__(self):
         return len(self.scenes)
@@ -129,18 +119,15 @@ class CLEVRHansDataset(Dataset):
     def __getitem__(self, idx):
         scene = self.scenes[idx]
 
-        # Load image
-        img_filename = scene.get("image_filename", f"CLEVR_Hans{self.n_classes}_{self.split}_{idx:06d}.png")
+        img_filename = scene.get("image_filename", f"CLEVR_Hans3_{self.split}_{idx:06d}.png")
         img_path = self.images_dir / img_filename
         image = Image.open(img_path).convert("RGB")
 
         if self.transform:
             image = self.transform(image)
 
-        # Class label
         label = scene.get("class_id", scene.get("class", 0))
 
-        # Confounder info (for evaluation)
         confounder_info = {}
         if self.return_confounders and self.confounders:
             class_key = label
@@ -148,7 +135,6 @@ class CLEVRHansDataset(Dataset):
                 confounder_info = {
                     "is_confounded": self.confounders[class_key]["confounded"],
                     "confounder_attrs": self.confounders[class_key].get("attributes", []),
-                    "objects": scene.get("objects", []),
                 }
 
         return {
@@ -157,6 +143,21 @@ class CLEVRHansDataset(Dataset):
             "confounder_info": confounder_info,
             "image_id": img_filename,
         }
+
+
+def clevr_collate_fn(batch):
+    """Custom collate that handles variable-length confounder_info."""
+    images = torch.stack([item["image"] for item in batch])
+    labels = torch.tensor([item["label"] for item in batch], dtype=torch.long)
+    image_ids = [item["image_id"] for item in batch]
+    confounder_infos = [item["confounder_info"] for item in batch]
+
+    return {
+        "image": images,
+        "label": labels,
+        "confounder_info": confounder_infos,
+        "image_id": image_ids,
+    }
 
 
 def get_clevr_hans_loaders(root_dir, variant="clevr_hans3", batch_size=64, num_workers=8):
@@ -180,15 +181,16 @@ def get_clevr_hans_loaders(root_dir, variant="clevr_hans3", batch_size=64, num_w
         num_workers=num_workers,
         pin_memory=True,
         persistent_workers=True if num_workers > 0 else False,
+        collate_fn=clevr_collate_fn,
     )
 
     val_loader = DataLoader(
         val_dataset, batch_size=batch_size, num_workers=num_workers, pin_memory=True,
-        persistent_workers=True if num_workers > 0 else False,
+        collate_fn=clevr_collate_fn,
     )
     test_loader = DataLoader(
         test_dataset, batch_size=batch_size, num_workers=num_workers, pin_memory=True,
-        persistent_workers=True if num_workers > 0 else False,
+        collate_fn=clevr_collate_fn,
     )
 
     return train_loader, val_loader, test_loader

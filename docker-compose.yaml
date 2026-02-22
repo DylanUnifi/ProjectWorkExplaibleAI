@@ -2,6 +2,7 @@ services:
   train-clevr:
     build: .
     command: python train_clevr_hans.py --config configs/clevr_hans_training.yaml
+    shm_size: '8g'
     volumes:
       - ./data:/app/data
       - ./checkpoints:/app/checkpoints
@@ -18,6 +19,7 @@ services:
   train-bdd:
     build: .
     command: python train_bdd_oia.py --config configs/bdd_oia_training.yaml
+    shm_size: '8g'
     volumes:
       - ./data:/app/data
       - ./checkpoints:/app/checkpoints
@@ -34,6 +36,7 @@ services:
   explain-clevr:
     build: .
     command: python explain_clevr.py --config configs/clevr_hans_explain.yaml
+    shm_size: '8g'
     volumes:
       - ./data:/app/data
       - ./checkpoints:/app/checkpoints
@@ -51,6 +54,7 @@ services:
   explain-bdd:
     build: .
     command: python explain_bdd.py --config configs/bdd_oia_explain.yaml
+    shm_size: '8g'
     volumes:
       - ./data:/app/data
       - ./checkpoints:/app/checkpoints

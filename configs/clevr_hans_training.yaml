@@ -13,7 +13,7 @@ model:
 quantum:
   n_qubits: 10
   layers: 2
-  backend: "lightning.gpu"
+  backend: "default.qubit"
 
 training:
   batch_size: 128             # ✅ Images plus petites
@@ -21,5 +21,5 @@ training:
   learning_rate: 0.001
   weight_decay: 0.0001
   early_stopping: 15
-  num_workers: 32
+  num_workers: 4
   use_amp: true
