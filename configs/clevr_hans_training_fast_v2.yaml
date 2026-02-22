@@ -1,0 +1,24 @@
+experiment_name: "clevr_qcnn_fast_v2"
+
+dataset:
+  root: "./data/CLEVR-Hans3"
+  variant: "clevr_hans3"
+
+model:
+  conv_channels: [64, 128, 256]
+  hidden_sizes: [512, 256]
+  dropout: 0.3
+
+quantum:
+  n_qubits: 6
+  layers: 3
+  backend: "lightning.qubit"
+
+training:
+  batch_size: 64
+  epochs: 100
+  learning_rate: 0.003
+  weight_decay: 0.00001
+  early_stopping: 20
+  num_workers: 8
+  use_amp: true

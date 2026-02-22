@@ -39,15 +39,15 @@ def _create_quantum_layer(n_qubits, n_layers=2, backend="lightning.qubit"):
     def qnode(inputs, weights):
         qml.templates.AngleEmbedding(inputs, wires=range(n_qubits), rotation="Y")
         qml.templates.AngleEmbedding(inputs, wires=range(n_qubits), rotation="Z")
-        qml.templates.BasicEntanglerLayers(weights, wires=range(n_qubits))
+        qml.templates.StronglyEntanglingLayers(weights, wires=range(n_qubits))
         return tuple(qml.expval(qml.PauliZ(i)) for i in range(n_qubits))
 
-    weight_shapes = {"weights": (n_layers, n_qubits)}
+    weight_shapes = {"weights": (n_layers, n_qubits, 3)}
     layer = qml.qnn.TorchLayer(qnode, weight_shapes)
 
     for name, param in layer.named_parameters():
         if "weights" in name:
-            nn.init.normal_(param, mean=0.0, std=0.01)
+            nn.init.uniform_(param, -np.pi / 2, np.pi / 2)
 
     return layer
 
