@@ -56,11 +56,7 @@ def train_bdd_oia(config):
         dropout=config["model"]["dropout"],
     )
     
-    # Multi-GPU
-    if DEVICE.type == "cuda" and torch.cuda.device_count() > 1:
-        print(f"🚀 Using {torch.cuda.device_count()} GPUs")
-        model = nn.DataParallel(model)
-    
+    # Multi-GPU disabled — PennyLane quantum layers are incompatible with nn.DataParallel.
     model = model.to(DEVICE)
     
     # Optimizer & Scheduler
@@ -83,7 +79,7 @@ def train_bdd_oia(config):
     
     # Mixed precision
     use_amp = config["training"].get("use_amp", True)
-    scaler = torch.cuda.amp.GradScaler() if (DEVICE.type == "cuda" and use_amp) else None
+    scaler = torch.amp.GradScaler('cuda') if (DEVICE.type == "cuda" and use_amp) else None
     
     # Early stopping
     early_stopping = EarlyStopping(patience=config["training"]["early_stopping"])
@@ -115,7 +111,7 @@ def train_bdd_oia(config):
             
             # Forward with AMP
             if use_amp:
-                with torch.cuda.amp.autocast():
+                with torch.amp.autocast('cuda'):
                     action_logits, explanation_logits = model(videos)
                     
                     # Multi-task loss

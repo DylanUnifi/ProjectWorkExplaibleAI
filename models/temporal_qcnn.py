@@ -92,11 +92,11 @@ class TemporalQCNN(nn.Module):
         """Create quantum layer."""
         dev = qml.device(backend, wires=n_qubits)
         
-        @qml.qnode(dev, interface="torch", diff_method="adjoint")
+        @qml.qnode(dev, interface="torch")
         def qnode(inputs, weights):
             qml.templates.AngleEmbedding(inputs, wires=range(n_qubits), rotation="Y")
             qml.templates.StronglyEntanglingLayers(weights, wires=range(n_qubits))
-            return [qml.expval(qml.PauliZ(i)) for i in range(n_qubits)]
+            return tuple(qml.expval(qml.PauliZ(i)) for i in range(n_qubits))
         
         weight_shapes = {"weights": (n_layers, n_qubits, 3)}
         return qml.qnn.TorchLayer(qnode, weight_shapes)
@@ -124,7 +124,14 @@ class TemporalQCNN(nn.Module):
         
         # Quantum layer
         x_quantum_input = torch.tanh(self.quantum_fc(x)) * np.pi
-        x_quantum = self.quantum_layer(x_quantum_input)  # (B, n_qubits)
+        batch_size = x_quantum_input.shape[0]
+        x_quantum = self.quantum_layer(x_quantum_input)
+        # PennyLane v0.44+ may return flat tensor; reshape to (batch, n_qubits)
+        if x_quantum.dim() == 1:
+            x_quantum = x_quantum.unsqueeze(0)
+        if x_quantum.shape[0] != batch_size:
+            n_qubits_out = x_quantum.numel() // batch_size
+            x_quantum = x_quantum.reshape(batch_size, n_qubits_out)
         x_quantum = self.bn_quantum(x_quantum)
         
         # Multi-task outputs

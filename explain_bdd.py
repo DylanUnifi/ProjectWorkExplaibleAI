@@ -15,11 +15,12 @@ from explainability.lime_explainer import LIMEExplainer
 from explainability.grad_explainer import GradientExplainer
 from explainability.metrics import XAIMetrics
 from explainability.visualization import visualize_video_explanation
+from utils.device import get_device
 
 def explain_bdd_oia(config):
     """Generate explanations for BDD-OIA predictions."""
     
-    DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    DEVICE = get_device()
     
     # Load model
     print("🔧 Loading trained model...")
@@ -46,7 +47,7 @@ def explain_bdd_oia(config):
     _, _, test_loader = get_bdd_oia_loaders(
         root_dir=config["dataset"]["root"],
         batch_size=config["batch_size"],
-        num_workers=8,
+        num_workers=config.get("num_workers", 4),
         n_frames=config["dataset"]["n_frames"],
     )
     

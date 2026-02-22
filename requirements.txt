@@ -1,16 +1,11 @@
-# Core (pin numpy for PyTorch 2.2 compatibility)
-numpy<2
+# Core
+numpy>=2.0
 
 # Experiment tracking
 wandb
 tensorboard
 
 # Data & vision
-# ── Experiment tracking ──────────────────────────────────────
-wandb
-tensorboard
-
-# ── Data & vision ────────────────────────────────────────────
 opencv-python-headless
 matplotlib
 tqdm
@@ -29,12 +24,4 @@ imageio
 imageio-ffmpeg
 
 # Quantum
-pennylane
-
-# ── Explainability ───────────────────────────────────────────
-captum
-shap
-lime
-
-# ── Quantum ──────────────────────────────────────────────────
 pennylane

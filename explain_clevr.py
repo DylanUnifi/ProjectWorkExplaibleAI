@@ -14,6 +14,7 @@ from models.clevr_qcnn import CLEVRQCNNClassifier
 from explainability.shap_explainer import SHAPExplainer
 from explainability.grad_explainer import GradientExplainer
 from explainability.metrics import XAIMetrics, ConfounderDetectionMetrics
+from utils.device import get_device
 
 def explain_clevr_hans(config):
     """
@@ -21,7 +22,7 @@ def explain_clevr_hans(config):
     whether model relies on confounders vs. true class rules.
     """
     
-    DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    DEVICE = get_device()
     variant = config["dataset"]["variant"]
     n_classes = 3 if variant == "clevr_hans3" else 7
     
@@ -48,7 +49,7 @@ def explain_clevr_hans(config):
         root_dir=config["dataset"]["root"],
         variant=variant,
         batch_size=1,  # Process one at a time for LIME
-        num_workers=8,
+        num_workers=config.get("num_workers", 4),
     )
     
     # Explainers
@@ -85,8 +86,8 @@ def explain_clevr_hans(config):
         confounder_info = batch["confounder_info"]
         image_id = batch["image_id"][0]
         
-        is_confounded = confounder_info["is_confounded"][0]
-        confounder_attrs = confounder_info["confounder_attrs"]
+        is_confounded = confounder_info[0]["is_confounded"]
+        confounder_attrs = confounder_info[0].get("confounder_attrs", [])
         
         # ═══════════════════════════════════════════════════
         # Generate explanations

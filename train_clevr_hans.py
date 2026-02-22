@@ -15,6 +15,7 @@ import wandb
 from data_loader.clevr_hans_loader import get_clevr_hans_loaders
 from models.clevr_qcnn import CLEVRQCNNClassifier
 from utils.device import get_device
+from utils.early_stopping import EarlyStopping
 
 
 def train_clevr_hans(config):
@@ -78,11 +79,12 @@ def train_clevr_hans(config):
     criterion = nn.CrossEntropyLoss()
     
     # AMP
-    scaler = torch.cuda.amp.GradScaler() if (DEVICE.type == "cuda" and config["training"].get("use_amp", True)) else None
+    scaler = torch.amp.GradScaler('cuda') if (DEVICE.type == "cuda" and config["training"].get("use_amp", True)) else None
     
     # Training loop (similaire à BDD-OIA)
     best_val_acc = 0
     EPOCHS = config["training"]["epochs"]
+    early_stopping = EarlyStopping(patience=config["training"].get("early_stopping", 15))
     
     for epoch in range(EPOCHS):
         # Train
@@ -98,7 +100,7 @@ def train_clevr_hans(config):
             optimizer.zero_grad()
             
             if scaler:
-                with torch.cuda.amp.autocast():
+                with torch.amp.autocast('cuda'):
                     logits = model(images)
                     loss = criterion(logits, labels)
                 scaler.scale(loss).backward()
@@ -162,6 +164,10 @@ def train_clevr_hans(config):
             print(f"  ✅ Best model saved: {100*val_acc:.2f}%")
         
         scheduler.step()
+        
+        if early_stopping(val_acc):
+            print(f"⏹️ Early stopping triggered at epoch {epoch+1}")
+            break
     
     # Test
     print("\n🧪 Testing...")
