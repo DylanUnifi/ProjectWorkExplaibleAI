@@ -26,4 +26,4 @@ methods:
 
 batch_size: 1
 n_samples: 20                # Analyze both confounded & clean
-output_dir: "./explanations/clevr_hans"
+output_dir: "/PROJECTWORKEXPLAIBLEAI/explanations/clevr_hans"
