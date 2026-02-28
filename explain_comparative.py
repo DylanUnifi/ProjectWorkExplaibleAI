@@ -92,7 +92,7 @@ def explain_single_sample(sample, models, explainers, config):
         # SHAP (Kernel SHAP on features)
         if "shap" in explainers["quantum_kernel_svm"]:
             shap_values = explainers["quantum_kernel_svm"]["shap"].explain(
-                image.cpu().numpy().flatten().reshape(1, -1)
+                image.detach().cpu().numpy().flatten().reshape(1, -1)
             )
             explanations["quantum_kernel_svm"] = {
                 "kernel_shap": torch.from_numpy(shap_values).view_as(image),

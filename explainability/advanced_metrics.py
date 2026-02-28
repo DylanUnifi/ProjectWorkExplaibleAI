@@ -31,8 +31,8 @@ class ComparativeXAIMetrics:
             correlation: Rank correlation coefficient
         """
         # Flatten
-        attr1_flat = attr1.abs().view(attr1.shape[0], -1).cpu().numpy()
-        attr2_flat = attr2.abs().view(attr2.shape[0], -1).cpu().numpy()
+        attr1_flat = attr1.abs().view(attr1.shape[0], -1).detach().cpu().numpy()
+        attr2_flat = attr2.abs().view(attr2.shape[0], -1).detach().cpu().numpy()
         
         correlations = []
         
@@ -124,8 +124,8 @@ class ComparativeXAIMetrics:
         attr_abs = attribution.abs().sum(dim=1)  # (B, H, W)
         
         # Flatten
-        attr_flat = attr_abs.view(attr_abs.shape[0], -1).cpu().numpy()
-        mask_flat = ground_truth_mask.view(ground_truth_mask.shape[0], -1).cpu().numpy()
+        attr_flat = attr_abs.view(attr_abs.shape[0], -1).detach().cpu().numpy()
+        mask_flat = ground_truth_mask.view(ground_truth_mask.shape[0], -1).detach().cpu().numpy()
         
         # Compute AP per sample
         aps = []
