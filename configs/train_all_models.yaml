@@ -12,9 +12,9 @@ dataset:
 models_to_train:
   #- quantum_kernel_svm
   #- hybrid_qcnn
-  #- resnet18
+  - resnet18
   - vit
-  #- protopnet
+  - protopnet
 
 n_classes: 3  # DOIT CORRESPONDRE AU VARIANT DU DATASET (3 ou 7)
 
