@@ -16,44 +16,9 @@ services:
               count: all
               capabilities: [gpu]
 
-  train-bdd:
-    build: .
-    command: python train_bdd_oia.py --config configs/bdd_oia_training.yaml
-    shm_size: '8g'
-    volumes:
-      - ./data:/app/data
-      - ./checkpoints:/app/checkpoints
-    environment:
-      - WANDB_API_KEY=${WANDB_API_KEY}
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
-
   explain-clevr:
     build: .
     command: python explain_clevr.py --config configs/clevr_hans_explain.yaml
-    shm_size: '8g'
-    volumes:
-      - ./data:/app/data
-      - ./checkpoints:/app/checkpoints
-      - ./outputs:/app/outputs
-    environment:
-      - WANDB_API_KEY=${WANDB_API_KEY}
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
-
-  explain-bdd:
-    build: .
-    command: python explain_bdd.py --config configs/bdd_oia_explain.yaml
     shm_size: '8g'
     volumes:
       - ./data:/app/data
