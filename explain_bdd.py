@@ -25,7 +25,7 @@ def explain_bdd_oia(config):
     # Load model
     print("🔧 Loading trained model...")
     checkpoint_path = config["model"]["checkpoint"]
-    checkpoint = torch.load(checkpoint_path)
+    checkpoint = torch.load(checkpoint_path, weights_only=False)
     
     model = TemporalQCNN(
         in_channels=3,

@@ -1,5 +1,11 @@
 # Core
 numpy>=2.0
+torch
+torchvision
+transformers
+scikit-learn
+joblib
+tqdm
 
 # Experiment tracking
 wandb
@@ -8,7 +14,6 @@ tensorboard
 # Data & vision
 opencv-python-headless
 matplotlib
-tqdm
 pyyaml
 Pillow
 

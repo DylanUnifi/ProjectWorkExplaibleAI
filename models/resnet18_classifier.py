@@ -3,6 +3,8 @@
 import torch
 import torch.nn as nn
 import torchvision.models as models
+from torchvision.models import ResNet18_Weights
+from tqdm import tqdm
 
 class ResNet18Classifier(nn.Module):
     """
@@ -14,7 +16,7 @@ class ResNet18Classifier(nn.Module):
         super().__init__()
         
         # Load pretrained ResNet-18
-        self.backbone = models.resnet18(pretrained=pretrained)
+        self.backbone = models.resnet18(weights=ResNet18_Weights.IMAGENET1K_V1 if pretrained else None)
         
         # Freeze early layers si transfer learning
         if freeze_backbone:
@@ -31,7 +33,7 @@ class ResNet18Classifier(nn.Module):
         
         # Register hooks for layer4 (last conv block)
         self.backbone.layer4.register_forward_hook(self._save_activation)
-        self.backbone.layer4.register_backward_hook(self._save_gradient)
+        self.backbone.layer4.register_full_backward_hook(self._save_gradient)
     
     def _save_activation(self, module, input, output):
         """Hook pour sauver activations (GradCAM)."""
@@ -138,7 +140,7 @@ def train_resnet18(model, train_loader, val_loader, config):
     criterion = nn.CrossEntropyLoss()
     
     # AMP
-    scaler = torch.cuda.amp.GradScaler()
+    scaler = torch.amp.GradScaler('cuda')
     
     # Training loop
     for epoch in range(config["epochs"]):
@@ -151,7 +153,7 @@ def train_resnet18(model, train_loader, val_loader, config):
             optimizer.zero_grad()
             
             # Mixed precision forward
-            with torch.cuda.amp.autocast():
+            with torch.amp.autocast('cuda'):
                 logits = model(images)
                 loss = criterion(logits, labels)
             
@@ -167,3 +169,19 @@ def train_resnet18(model, train_loader, val_loader, config):
         print(f"Epoch {epoch+1}: Val Acc = {val_acc:.2%}")
         
         scheduler.step()
+
+
+def evaluate_model(model, dataloader, device):
+    """Evaluate model accuracy on a dataloader."""
+    model.eval()
+    correct = 0
+    total = 0
+    with torch.no_grad():
+        for batch in dataloader:
+            images = batch["image"].to(device)
+            labels = batch["label"].to(device)
+            logits = model(images)
+            preds = logits.argmax(dim=1)
+            correct += (preds == labels).sum().item()
+            total += len(labels)
+    return correct / total if total > 0 else 0.0

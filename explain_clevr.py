@@ -29,17 +29,17 @@ def explain_clevr_hans(config):
     # Load model
     print("🔧 Loading trained model...")
     checkpoint_path = config["model"]["checkpoint"]
-    checkpoint = torch.load(checkpoint_path)
+    checkpoint = torch.load(checkpoint_path, weights_only=False)
     
     model = CLEVRQCNNClassifier(
-    n_classes=n_classes,
-    input_channel=3,
-    n_qubits=config["quantum"]["n_qubits"],
-    n_layers=config["quantum"]["layers"],
-    backend=config["quantum"]["backend"],
-    conv_channels=config["model"]["conv_channels"],
-    hidden_sizes=config["model"]["hidden_sizes"],
-    dropout=config["model"]["dropout"],
+        n_classes=n_classes,
+        input_channel=3,
+        n_qubits=config["quantum"]["n_qubits"],
+        n_layers=config["quantum"]["layers"],
+        backend=config["quantum"]["backend"],
+        conv_channels=config["model"]["conv_channels"],
+        hidden_sizes=config["model"]["hidden_sizes"],
+        dropout=config["model"]["dropout"],
     )
     
     model.load_state_dict(checkpoint["model_state_dict"])
@@ -208,12 +208,19 @@ def explain_clevr_hans(config):
         clean_results = [r for r in non_confounded_results if r["method"] == method]
         
         if conf_results and clean_results:
-            conf_fid_ins = np.mean([r["faithfulness_insertion"] for r in conf_results])
-            clean_fid_ins = np.mean([r["faithfulness_insertion"] for r in clean_results])
-            
-            conf_fid_del = np.mean([r["faithfulness_deletion"] for r in conf_results])
-            clean_fid_del = np.mean([r["faithfulness_deletion"] for r in clean_results])
-            
+            conf_ins = [r["faithfulness_insertion"] for r in conf_results if "faithfulness_insertion" in r]
+            clean_ins = [r["faithfulness_insertion"] for r in clean_results if "faithfulness_insertion" in r]
+            conf_del = [r["faithfulness_deletion"] for r in conf_results if "faithfulness_deletion" in r]
+            clean_del = [r["faithfulness_deletion"] for r in clean_results if "faithfulness_deletion" in r]
+
+            if not (conf_ins and clean_ins and conf_del and clean_del):
+                continue
+
+            conf_fid_ins = np.mean(conf_ins)
+            clean_fid_ins = np.mean(clean_ins)
+            conf_fid_del = np.mean(conf_del)
+            clean_fid_del = np.mean(clean_del)
+
             print(f"\n{method}:")
             print(f"  Confounded   - Insertion: {conf_fid_ins:.4f}, Deletion: {conf_fid_del:.4f}")
             print(f"  Non-confounded - Insertion: {clean_fid_ins:.4f}, Deletion: {clean_fid_del:.4f}")
