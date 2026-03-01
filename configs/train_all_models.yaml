@@ -4,22 +4,22 @@ experiment_name: "xai_comparative_study_clevr_hans3"
 
 dataset:
   root: "./data/clevr_hans3"
-  variant: "clevr_hans3"  # or "clevr_hans7"
+  variant: "clevr_hans3"  # 3 classes pour la version rapide (ou "clevr_hans7" pour 7 classes)
   batch_size: 128
-  num_workers: 32
+  num_workers: 8          # Ajusté pour éviter les crash docker (au lieu de 32)
 
-# Models to train
+# Liste des modèles à entraîner (tu peux en commenter certains si tu veux en entraîner moins)
 models_to_train:
-  - quantum_kernel_svm
-  - hybrid_qcnn
+  #- quantum_kernel_svm
+  #- hybrid_qcnn
   - resnet18
-  - vit
-  - protopnet
+  #- vit
+  #- protopnet
 
-n_classes: 3  # 3 for clevr_hans3, 7 for clevr_hans7
+n_classes: 3  # DOIT CORRESPONDRE AU VARIANT DU DATASET (3 ou 7)
 
 # ═══════════════════════════════════════════════════════════
-# Model-specific configs
+# Configurations spécifiques par modèle
 # ═══════════════════════════════════════════════════════════
 
 quantum_kernel:

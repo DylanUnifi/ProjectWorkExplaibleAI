@@ -1,27 +1,12 @@
 services:
-  train-clevr:
+  workspace:
     build: .
-    command: python train_clevr_hans.py --config configs/clevr_hans_training.yaml
+    # On garde le conteneur en vie indéfiniment
+    command: tail -f /dev/null
     shm_size: '8g'
     volumes:
-      - ./data:/app/data
-      - ./checkpoints:/app/checkpoints
-    environment:
-      - WANDB_API_KEY=${WANDB_API_KEY}
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
-
-  explain-clevr:
-    build: .
-    command: python explain_clevr.py --config configs/clevr_hans_explain.yaml
-    shm_size: '8g'
-    volumes:
-      - ./data:/app/data
+      - .:/app               # On monte tout le code source (pratique pour le modifier en temps réel)
+      - ./data:/app/data     # Montage des données
       - ./checkpoints:/app/checkpoints
       - ./outputs:/app/outputs
     environment:
