@@ -300,6 +300,22 @@ class ProtoPNet(nn.Module):
                     plt.close()
 
 
+def evaluate_model(model, dataloader, device):
+    """Evaluate model accuracy on a dataloader."""
+    model.eval()
+    correct = 0
+    total = 0
+    with torch.no_grad():
+        for batch in dataloader:
+            images = batch["image"].to(device)
+            labels = batch["label"].to(device)
+            logits = model(images)
+            preds = logits.argmax(dim=1)
+            correct += (preds == labels).sum().item()
+            total += labels.size(0)
+    return correct / total if total > 0 else 0.0
+
+
 # Special training procedure for ProtoPNet
 def train_protopnet(model, train_loader, val_loader, config):
     """
