@@ -33,6 +33,7 @@ qcnn:
   backend: "lightning.gpu"
   conv_channels: [64, 128, 256]
   hidden_sizes: [512, 256]
+  dropout: 0.0
 
 # XAI methods to apply
 xai_methods:
