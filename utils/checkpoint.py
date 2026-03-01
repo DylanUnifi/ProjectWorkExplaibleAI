@@ -20,7 +20,7 @@ def safe_load_checkpoint(path, model, optimizer=None, device="cpu"):
         print(f"Warning: No checkpoint found at {path}")
         return 0
 
-    checkpoint = torch.load(path, map_location=device)
+    checkpoint = torch.load(path, map_location=device, weights_only=False)
     model.load_state_dict(checkpoint["model_state_dict"])
 
     if optimizer and "optimizer_state_dict" in checkpoint:

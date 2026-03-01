@@ -227,7 +227,7 @@ def train_bdd_oia(config):
     # Load best model
     checkpoint_path = os.path.join(SAVE_DIR, "best_model.pth")
     if os.path.exists(checkpoint_path):
-        checkpoint = torch.load(checkpoint_path)
+        checkpoint = torch.load(checkpoint_path, weights_only=False)
         if isinstance(model, nn.DataParallel):
             model.module.load_state_dict(checkpoint["model_state_dict"])
         else:

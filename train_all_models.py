@@ -262,7 +262,7 @@ def train_neural_network(model, train_loader, val_loader, test_loader, train_con
     
     # AMP
     use_amp = train_config.get("use_amp", True)
-    scaler = torch.cuda.amp.GradScaler() if use_amp else None
+    scaler = torch.amp.GradScaler('cuda') if use_amp else None
     
     # Training loop
     best_val_acc = 0
@@ -284,7 +284,7 @@ def train_neural_network(model, train_loader, val_loader, test_loader, train_con
             optimizer.zero_grad()
             
             if use_amp:
-                with torch.cuda.amp.autocast():
+                with torch.amp.autocast('cuda'):
                     logits = model(images)
                     loss = criterion(logits, labels)
                 
