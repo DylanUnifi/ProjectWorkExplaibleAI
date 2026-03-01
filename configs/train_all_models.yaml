@@ -3,7 +3,7 @@
 experiment_name: "xai_comparative_study_clevr_hans3"
 
 dataset:
-  root: "./data/clevr_hans3"
+  root: "./data/CLEVR-Hans3"
   variant: "clevr_hans3"  # 3 classes pour la version rapide (ou "clevr_hans7" pour 7 classes)
   batch_size: 128
   num_workers: 8          # Ajusté pour éviter les crash docker (au lieu de 32)
