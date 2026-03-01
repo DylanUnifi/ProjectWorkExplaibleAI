@@ -12,8 +12,8 @@ dataset:
 models_to_train:
   #- quantum_kernel_svm
   #- hybrid_qcnn
-  - resnet18
-  #- vit
+  #- resnet18
+  - vit
   #- protopnet
 
 n_classes: 3  # DOIT CORRESPONDRE AU VARIANT DU DATASET (3 ou 7)
@@ -43,7 +43,7 @@ resnet18:
   pretrained: true
   freeze_backbone: false
   training:
-    epochs: 50
+    epochs: 10
     learning_rate: 0.0001
     weight_decay: 0.0001
     use_amp: true
@@ -51,7 +51,7 @@ resnet18:
 vit:
   pretrained: true
   training:
-    epochs: 50
+    epochs: 10
     learning_rate: 0.00001
     weight_decay: 0.0001
     use_amp: true
