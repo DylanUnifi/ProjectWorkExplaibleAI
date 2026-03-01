@@ -82,12 +82,17 @@ class CLEVRHansDataset(Dataset):
 
         if scenes_dir.is_dir():
             scene_files = sorted(scenes_dir.glob("*.json"))
-            if len(scene_files) == 1:
-                with open(scene_files[0], "r") as f:
+            # Prefer aggregated scene files (e.g. CLEVR_HANS_scenes_train.json)
+            # to avoid double-counting when both aggregated and individual per-class
+            # files (e.g. CLEVR_HANS_scenes_train_classid_0.json) coexist.
+            aggregated = [sf for sf in scene_files if "scenes" in sf.stem and "_classid_" not in sf.stem]
+            files_to_load = aggregated if aggregated else scene_files
+            if len(files_to_load) == 1:
+                with open(files_to_load[0], "r") as f:
                     data = json.load(f)
                     self.scenes = data.get("scenes", data)
             else:
-                for sf in scene_files:
+                for sf in files_to_load:
                     with open(sf, "r") as f:
                         data = json.load(f)
                         if "scenes" in data:

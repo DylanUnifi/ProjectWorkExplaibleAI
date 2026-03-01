@@ -40,7 +40,10 @@ class ProtoPNet(nn.Module):
         # 1. Feature Extractor (CNN backbone)
         # ═══════════════════════════════════════════════════
         if backbone == "resnet18":
-            resnet = models.resnet18(pretrained=pretrained)
+            if pretrained:
+                resnet = models.resnet18(weights=models.ResNet18_Weights.DEFAULT)
+            else:
+                resnet = models.resnet18(weights=None)
             # Remove FC and avgpool
             self.features = nn.Sequential(*list(resnet.children())[:-2])
             feature_dim = 512

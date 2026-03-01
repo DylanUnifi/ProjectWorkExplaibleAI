@@ -11,8 +11,8 @@ dataset:
 # Liste des modèles à entraîner (tu peux en commenter certains si tu veux en entraîner moins)
 models_to_train:
   #- quantum_kernel_svm
-  #- hybrid_qcnn
-  #- resnet18
+  - hybrid_qcnn
+  - resnet18
   - vit
   #- protopnet
 

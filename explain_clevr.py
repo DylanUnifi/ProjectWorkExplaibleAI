@@ -128,9 +128,6 @@ def _explain_model(model_name, model, is_torch_module, test_loader, n_samples, c
         # Evaluate metrics
         # ═══════════════════════════════════════════════════
         for method_name, attr in explanations.items():
-            print("image shape:", image.shape, image.dtype, image.device)
-            print("attr shape:", attr.shape, attr.dtype, attr.device)
-            print("label:", label, type(label))
             if not isinstance(attr, torch.Tensor):
                 attr = torch.tensor(np.array(attr), dtype=torch.float32)
             attr = attr.detach().to(device=image.device, dtype=torch.float32)
@@ -140,11 +137,22 @@ def _explain_model(model_name, model, is_torch_module, test_loader, n_samples, c
             if attr.dim() == 3:
                 attr = attr.unsqueeze(0)
 
+            metrics = xai_metrics.evaluate_all(image, attr, target=label)
+
             result = {
                 "image_id": image_id,
                 "method": method_name,
                 "is_confounded": int(is_confounded),
+                "faithfulness_insertion": metrics["faithfulness_insertion"],
+                "faithfulness_deletion": metrics["faithfulness_deletion"],
+                "infidelity": metrics["infidelity"],
+                "sparsity": metrics["sparsity"],
             }
+
+            wandb.log({
+                f"{method_name}/{'confounded' if is_confounded else 'clean'}/faithfulness_insertion": metrics["faithfulness_insertion"],
+                f"{method_name}/{'confounded' if is_confounded else 'clean'}/faithfulness_deletion": metrics["faithfulness_deletion"],
+            })
 
             if is_confounded:
                 confounded_results.append(result)

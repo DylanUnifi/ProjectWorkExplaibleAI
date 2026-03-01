@@ -21,7 +21,7 @@ checkpoints:
 # Models to explain
 models_to_explain:
   #- quantum_kernel_svm
-  #- hybrid_qcnn
+  - hybrid_qcnn
   - resnet18
   #- vit
   #- protopnet
