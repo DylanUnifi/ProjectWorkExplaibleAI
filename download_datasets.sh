@@ -1,0 +1,35 @@
+#!/bin/bash
+# ==========================================
+# Script to download and prepare datasets
+# ==========================================
+
+echo "Creating dataset directories..."
+mkdir -p data
+
+echo "1) Downloading CLEVR-Hans3..."
+if [ ! -d "CLEVR-Hans3" ]; then
+    wget -nc -q --show-progress https://zenodo.org/record/4446860/files/CLEVR-Hans3.zip -P data/
+    echo "Extracting CLEVR-Hans3..."
+    unzip -q -n data/CLEVR-Hans3.zip -d .
+    rm data/CLEVR-Hans3.zip
+else
+    echo "CLEVR-Hans3 already exists."
+fi
+
+echo "2) Setting up MNMath (MNISTMath)..."
+if [ ! -d "data/mnmath" ]; then
+    # MNMath is generated via rsbench-code
+    if [ ! -d "rsbench-code" ]; then
+        git clone https://github.com/unitn-sml/rsbench-code.git
+    fi
+    cd rsbench-code
+    pip install -r requirements.txt
+    echo "Generating MNMath dataset... this may take a moment."
+    python -m rssgen examples_config/mnist.yml mnist ../data/mnmath
+    cd ..
+    rm -rf rsbench-code
+else
+    echo "MNMath already exists in data/mnmath."
+fi
+
+echo "Done! Datasets are ready for the XAI pipelines."
