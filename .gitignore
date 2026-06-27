@@ -1,0 +1,54 @@
+# Environment and Python
+.env
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+venv/
+env/
+.venv/
+
+# IDE and OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Data and Datasets
+data/
+scratch_rsbench/
+
+# Model Checkpoints & Weights
+checkpoints/
+*.pth
+*.pt
+
+# Experiments, Logs, and Outputs
+outputs/
+wandb/
+explanations/
+logs/
+experiments/
+results/
+paper_figures/
+*.log
+
+# Caches and Serialized Data
+.tile_optimizer_history.json
+*.pkl
+*.npy
+*.npz
+*.joblib
+.ipynb_checkpoints/
+
+# Additional ignores
+*.mp4
+*.avi
+*.gif
+*.csv
+.pytest_cache/
+htmlcov/
+.coverage
+.jupyter/

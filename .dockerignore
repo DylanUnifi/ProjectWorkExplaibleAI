@@ -1,0 +1,8 @@
+data/
+checkpoints/
+outputs/
+wandb/
+.git/
+__pycache__/
+*.pyc
+.env

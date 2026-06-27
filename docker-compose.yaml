@@ -1,0 +1,120 @@
+# docker-compose.yml — XAI Comparative Study
+# ======================================
+# Launch the experiments:
+#
+#   docker compose build                              # build the image
+#   docker compose run --rm train_resnet50_clevr      # train ResNet50 on CLEVR-Hans3
+#   docker compose run --rm explain_resnet50_clevr    # run XAI on ResNet50
+#   docker compose run --rm eda_clevr                 # run EDA on CLEVR-Hans3
+
+x-gpu-config: &gpu-config
+  image: xai_project
+  shm_size: '32gb'
+  ipc: host
+  deploy:
+    resources:
+      reservations:
+        devices:
+          - driver: nvidia
+            count: all
+            capabilities: [gpu]
+  volumes:
+    - .:/app
+  environment:
+    - WANDB_API_KEY=${WANDB_API_KEY:-}
+    - WANDB_MODE=online
+
+services:
+  builder:
+    image: xai_project
+    build: .
+
+  # ════════════════════════════════════════════════════════════════════
+  # EDA (Exploratory Data Analysis)
+  # ════════════════════════════════════════════════════════════════════
+
+  eda_clevr:
+    <<: *gpu-config
+    command: >
+      python eda.py
+        --dataset clevr_hans3
+        --max_samples 2000
+
+  eda_mnmath:
+    <<: *gpu-config
+    command: >
+      python eda.py
+        --dataset mnmath
+        --max_samples 2000
+
+  # ════════════════════════════════════════════════════════════════════
+  # TRAINING
+  # ════════════════════════════════════════════════════════════════════
+
+  train_resnet50_clevr:
+    <<: *gpu-config
+    command: >
+      python train.py
+        --dataset clevr_hans3
+        --model resnet50
+        --epochs 20
+        --batch_size 32
+
+  train_vit_clevr:
+    <<: *gpu-config
+    command: >
+      python train.py
+        --dataset clevr_hans3
+        --model vit
+        --epochs 20
+        --batch_size 16
+
+  train_protopnet_clevr:
+    <<: *gpu-config
+    command: >
+      python train.py
+        --dataset clevr_hans3
+        --model protopnet
+        --epochs 20
+        --batch_size 32
+
+  train_hybrid_qcnn_clevr:
+    <<: *gpu-config
+    command: >
+      python train.py
+        --dataset clevr_hans3
+        --model hybrid_qcnn
+        --epochs 10
+        --batch_size 32
+
+
+  # ════════════════════════════════════════════════════════════════════
+  # EXPLAINABILITY (XAI)
+  # ════════════════════════════════════════════════════════════════════
+
+  explain_resnet50_clevr:
+    <<: *gpu-config
+    command: >
+      python explain.py
+        --dataset clevr_hans3
+        --model resnet50
+        --batch_size 16
+
+  explain_vit_clevr:
+    <<: *gpu-config
+    command: >
+      python explain.py
+        --dataset clevr_hans3
+        --model vit
+        --batch_size 8
+
+  # ════════════════════════════════════════════════════════════════════
+  # UTILITY
+  # ════════════════════════════════════════════════════════════════════
+
+  # Interactive shell for debugging
+  shell:
+    <<: *gpu-config
+    stdin_open: true
+    tty: true
+    command: bash
