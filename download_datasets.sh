@@ -23,8 +23,9 @@ if [ ! -d "data/mnmath" ]; then
         git clone https://github.com/unitn-sml/rsbench-code.git
     fi
     cd rsbench-code/rssgen
-    # Remove bpy (Blender Python) from requirements since it's not needed for MNMath and breaks on Python 3.10
+    # Remove bpy and mathutils (Blender Python libs) from requirements since they are not needed for MNMath and break on Python 3.10/runtime images
     sed -i '/bpy/d' requirements.txt
+    sed -i '/mathutils/d' requirements.txt
     pip install -r requirements.txt
     echo "Generating MNMath dataset... this may take a moment."
     python -m rssgen examples_config/mnist.yml mnist ../../data/mnmath
