@@ -75,7 +75,7 @@ def main():
     if args.model == "resnet50":
         model = ResNet50Classifier(n_classes=n_classes, input_channels=in_channels)
     elif args.model == "vit":
-        model = ViTClassifier(n_classes=n_classes, pretrained=True)
+        model = ViTClassifier(n_classes=n_classes, pretrained=True, input_channels=in_channels)
     elif args.model == "protopnet":
         model = ProtoPNet(num_classes=n_classes, num_prototypes=n_classes*10)
     elif args.model == "hybrid_qcnn":

@@ -142,8 +142,10 @@ class ViTClassifier(nn.Module):
     Utilise HuggingFace Transformers (optimisé, facile).
     """
     
-    def __init__(self, n_classes=3, pretrained=True, image_size=224):
+    def __init__(self, n_classes=3, pretrained=True, image_size=224, input_channels=3):
         super().__init__()
+        
+        self.input_channels = input_channels
         
         if pretrained:
             # Load pretrained ViT (ImageNet)
@@ -177,6 +179,9 @@ class ViTClassifier(nn.Module):
             logits: (B, n_classes)
             attentions: List of (B, n_heads, n_patches, n_patches) [if output_attentions]
         """
+        if self.input_channels == 1 and x.shape[1] == 1:
+            x = x.repeat(1, 3, 1, 1)  # (B, 3, H, W)
+            
         outputs = self.vit(
             pixel_values=x,
             output_attentions=output_attentions,
