@@ -17,7 +17,7 @@ else
 fi
 
 echo "2) Setting up MNMath (MNISTMath)..."
-if [ ! -d "data/mnmath" ]; then
+if [ ! -d "data/mnmath" ] || [ -z "$(ls -A data/mnmath 2>/dev/null)" ]; then
     # MNMath is generated via rsbench-code
     if [ ! -d "rsbench-code" ]; then
         git clone https://github.com/unitn-sml/rsbench-code.git
