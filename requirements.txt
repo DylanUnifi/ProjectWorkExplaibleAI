@@ -1,7 +1,5 @@
-# Core
+# Core (torch and torchvision are installed via Dockerfile with cu130)
 numpy>=2.0
-torch
-torchvision
 transformers
 scikit-learn
 joblib
@@ -9,17 +7,14 @@ tqdm
 
 # Experiment tracking
 wandb
-tensorboard
 
 # Data & vision
 opencv-python-headless
 matplotlib
 seaborn
-pyyaml
 Pillow
 
 # Explainability
-captum
 shap
 lime
 scikit-image
@@ -29,16 +24,8 @@ scipy
 imageio
 imageio-ffmpeg
 
-# Quantum
+# Quantum (for Hybrid QCNN bonus)
 pennylane
 
-# Hyperparameter optimization
-optuna
-
 # Data analysis
-pandas
-
-# Testing & DX
-pytest
-pre-commit
 umap-learn
