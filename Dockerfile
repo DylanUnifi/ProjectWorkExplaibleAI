@@ -1,6 +1,6 @@
 # Dockerfile for the XAI Comparative Study
 # ========================================
-# Base: NVIDIA CUDA 13.0 (compatible with your RTX 6000 Ada and 13.1 driver)
+# Base: NVIDIA CUDA 13.0
 #
 # Build : docker compose build
 # Run   : see docker-compose.yml
