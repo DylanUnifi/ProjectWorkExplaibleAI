@@ -108,6 +108,60 @@ services:
         --model vit
         --batch_size 8
 
+  # MNMath Training Services
+  train_resnet50_mnmath:
+    <<: *gpu-config
+    command: >
+      python train.py
+        --dataset mnmath
+        --model resnet50
+        --epochs 20
+        --batch_size 32
+
+  train_vit_mnmath:
+    <<: *gpu-config
+    command: >
+      python train.py
+        --dataset mnmath
+        --model vit
+        --epochs 20
+        --batch_size 16
+
+  train_protopnet_mnmath:
+    <<: *gpu-config
+    command: >
+      python train.py
+        --dataset mnmath
+        --model protopnet
+        --epochs 20
+        --batch_size 32
+
+  train_hybrid_qcnn_mnmath:
+    <<: *gpu-config
+    command: >
+      python train.py
+        --dataset mnmath
+        --model hybrid_qcnn
+        --epochs 10
+        --batch_size 32
+
+  # MNMath Explain Services
+  explain_resnet50_mnmath:
+    <<: *gpu-config
+    command: >
+      python explain.py
+        --dataset mnmath
+        --model resnet50
+        --batch_size 16
+
+  explain_vit_mnmath:
+    <<: *gpu-config
+    command: >
+      python explain.py
+        --dataset mnmath
+        --model vit
+        --batch_size 8
+
   # ════════════════════════════════════════════════════════════════════
   # UTILITY
   # ════════════════════════════════════════════════════════════════════
