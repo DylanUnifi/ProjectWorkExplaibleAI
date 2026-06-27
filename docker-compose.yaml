@@ -118,3 +118,9 @@ services:
     stdin_open: true
     tty: true
     command: bash
+
+  # Download datasets
+  download_datasets:
+    <<: *gpu-config
+    command: bash download_datasets.sh
+
