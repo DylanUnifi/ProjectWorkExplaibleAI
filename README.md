@@ -1,6 +1,6 @@
 # Comparative Study of Post-Hoc vs Inherent Explainability
 
-**Explainable Artificial Intelligence (Spring 2026)**  
+**Explainable Artificial Intelligence**  
 **MSc in Artificial Intelligence, University of Florence**  
 
 ## Overview
