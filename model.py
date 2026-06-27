@@ -46,11 +46,15 @@ class ResNet50Classifier(nn.Module):
     Optimized for AMP (Tensor Cores) and SHAP compatibility.
     """
     
-    def __init__(self, n_classes=3, pretrained=True, freeze_backbone=False):
+    def __init__(self, n_classes=3, input_channels=3, pretrained=True, freeze_backbone=False):
         super().__init__()
         
         # Load pretrained ResNet-50
         self.backbone = models.resnet50(weights=ResNet50_Weights.IMAGENET1K_V1 if pretrained else None)
+        
+        if input_channels != 3 or n_classes == 2:
+            self.backbone.conv1 = nn.Conv2d(input_channels, 64, kernel_size=3, stride=1, padding=1, bias=False)
+            self.backbone.maxpool = nn.Identity()
         
         # Disable inplace ReLU operations for gradient computation compatibility
         # (required for SHAP and other gradient-based explainers)
@@ -321,6 +325,7 @@ class ProtoPNet(nn.Module):
     def __init__(
         self,
         n_classes=3,
+        input_channels=3,
         n_prototypes_per_class=10,
         prototype_shape=(128, 1, 1),  # (channels, H, W)
         backbone="resnet50",
@@ -340,6 +345,10 @@ class ProtoPNet(nn.Module):
                 resnet = models.resnet50(weights=models.ResNet50_Weights.DEFAULT)
             else:
                 resnet = models.resnet50(weights=None)
+                
+            if input_channels != 3 or n_classes == 2:
+                resnet.conv1 = nn.Conv2d(input_channels, 64, kernel_size=3, stride=1, padding=1, bias=False)
+                resnet.maxpool = nn.Identity()
             
             # Disable inplace ReLU operations for gradient computation compatibility
             for module in resnet.modules():

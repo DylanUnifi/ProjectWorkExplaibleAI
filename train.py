@@ -90,7 +90,15 @@ def main():
         model = train_protopnet(model, train_loader, val_loader, args.epochs, args.device, save_dir="checkpoints")
     else:
         optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
-        criterion = nn.CrossEntropyLoss()
+        
+        # Add class weights based on EDA results
+        if args.dataset == "mnmath":
+            # Class 0: ~250 samples, Class 1: ~700 samples (Ratio roughly 3:1)
+            # Weights are inversely proportional to class frequencies
+            weights = torch.tensor([3.0, 1.0]).to(args.device)
+            criterion = nn.CrossEntropyLoss(weight=weights)
+        else:
+            criterion = nn.CrossEntropyLoss()
         
         best_acc = 0
         for epoch in range(args.epochs):

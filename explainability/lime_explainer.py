@@ -54,6 +54,19 @@ class LIMEExplainer:
         # Convert to numpy (H, W, C) [0, 255]
         img_np = (image.permute(1, 2, 0).detach().cpu().numpy() * 255).astype(np.uint8)
         
+        # Custom segmentation for MNMath (32x128 grid)
+        # We know MNMath has 4 digits side-by-side, each 32x32.
+        # Quickshift/SLIC struggle heavily with binary black-background images.
+        if img_np.shape[0] == 32 and img_np.shape[1] == 128:
+            def custom_segmentation(img):
+                segments = np.zeros(img.shape[:2], dtype=int)
+                for i in range(4):
+                    segments[:, i*32:(i+1)*32] = i
+                return segments
+            segmentation_fn = custom_segmentation
+        else:
+            segmentation_fn = None
+        
         # Explain
         explanation = self.explainer.explain_instance(
             img_np,
@@ -62,6 +75,7 @@ class LIMEExplainer:
             hide_color=0,
             num_samples=num_samples,
             batch_size=32,
+            segmentation_fn=segmentation_fn,
         )
         
         # Get mask for top class
