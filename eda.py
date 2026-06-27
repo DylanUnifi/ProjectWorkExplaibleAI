@@ -22,7 +22,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Exploratory Data Analysis (EDA) based on Wasserman & Bishop.")
     parser.add_argument("--max_samples", type=int, default=1000, help="Max samples to analyze (to save memory/time).")
     parser.add_argument("--batch_size", type=int, default=64)
-    parser.add_argument("--datasets", type=str, nargs="+", default=["clevr_hans", "mnmath"], help="Datasets to analyze")
+    parser.add_argument("--dataset", type=str, required=True, choices=["clevr_hans3", "mnmath"], help="Dataset to analyze")
     return parser.parse_args()
 
 
@@ -262,20 +262,21 @@ def main():
     
     wandb.init(
         project="XAI_Comparative_Study",
-        name="EDA_Comprehensive",
+        name=f"EDA_{args.dataset}",
         job_type="Exploratory_Data_Analysis",
         config=vars(args)
     )
     
-    if "clevr_hans" in args.datasets:
+    if args.dataset == "clevr_hans3":
         train_loader, _, _ = get_clevr_hans_loaders(
+            root_dir="./CLEVR-Hans3",
             batch_size=args.batch_size,
             max_samples=args.max_samples
         )
         if train_loader is not None:
             run_eda("CLEVR-Hans3", train_loader)
             
-    if "mnmath" in args.datasets:
+    elif args.dataset == "mnmath":
         train_loader, _, _ = get_mnmath_loaders(
             batch_size=args.batch_size,
             max_samples=args.max_samples
