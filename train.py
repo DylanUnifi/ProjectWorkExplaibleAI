@@ -87,7 +87,21 @@ def main():
     # 3. Train
     if args.model == "protopnet":
         print("Training ProtoPNet using specialized routine...")
-        model = train_protopnet(model, train_loader, val_loader, args.epochs, args.device, save_dir="checkpoints")
+        config = {
+            "epochs_phase1": args.epochs,
+            "epochs_phase3": max(1, args.epochs // 2),
+            "lr_features": 1e-4,
+            "lr_projection": 1e-4,
+            "lr_prototypes": 3e-3,
+            "lr_last": 1e-4,
+            "lr_last_finetune": 1e-4
+        }
+        model = train_protopnet(model, train_loader, val_loader, config)
+        
+        # Save the final model manually since train_protopnet doesn't
+        os.makedirs("checkpoints", exist_ok=True)
+        torch.save(model.state_dict(), f"checkpoints/{args.model}_{args.dataset}_best.pth")
+        print("Saved final ProtoPNet model!")
     else:
         optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
         
