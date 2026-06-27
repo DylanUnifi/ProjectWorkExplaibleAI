@@ -77,7 +77,7 @@ def main():
     elif args.model == "vit":
         model = ViTClassifier(n_classes=n_classes, pretrained=True, input_channels=in_channels)
     elif args.model == "protopnet":
-        model = ProtoPNet(num_classes=n_classes, num_prototypes=n_classes*10)
+        model = ProtoPNet(n_classes=n_classes, input_channels=in_channels, n_prototypes_per_class=10)
     elif args.model == "hybrid_qcnn":
         model = CLEVRQCNNClassifier(n_classes=n_classes, input_channel=in_channels, n_qubits=8, n_layers=1)
 
