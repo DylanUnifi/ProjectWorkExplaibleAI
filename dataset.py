@@ -487,7 +487,7 @@ class MNMathDataset(Dataset):
             self.labels.append(primary_label)
             
             concept_values = data["meta"]["concepts"]
-            concepts = np.array(concept_values).astype(np.compat.long)
+            concepts = np.array(concept_values).astype(np.int64)
             self.concepts.append(concepts)
             
         self.list_images = new_images
