@@ -48,7 +48,7 @@ def main():
 
     print(f"Loading {args.dataset}...")
     if args.dataset == "clevr_hans3":
-        _, _, test_loader = get_clevr_hans_loaders(batch_size=args.batch_size, max_samples=args.max_samples)
+        _, _, test_loader = get_clevr_hans_loaders(root_dir="./CLEVR-Hans3", batch_size=args.batch_size, max_samples=args.max_samples)
         n_classes = 3
         in_channels = 3
     else:
