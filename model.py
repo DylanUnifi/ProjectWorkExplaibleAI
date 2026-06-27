@@ -182,6 +182,13 @@ class ViTClassifier(nn.Module):
         if self.input_channels == 1 and x.shape[1] == 1:
             x = x.repeat(1, 3, 1, 1)  # (B, 3, H, W)
             
+        # Resize if image size doesn't match the model's expected size
+        expected_size = self.vit.config.image_size
+        if x.shape[2] != expected_size or x.shape[3] != expected_size:
+            x = torch.nn.functional.interpolate(
+                x, size=(expected_size, expected_size), mode="bilinear", align_corners=False
+            )
+            
         outputs = self.vit(
             pixel_values=x,
             output_attentions=output_attentions,
