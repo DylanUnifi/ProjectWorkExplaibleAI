@@ -26,6 +26,8 @@ if [ ! -d "data/mnmath" ]; then
     # Remove bpy and mathutils (Blender Python libs) from requirements since they are not needed for MNMath and break on Python 3.10/runtime images
     sed -i '/bpy/d' requirements.txt
     sed -i '/mathutils/d' requirements.txt
+    # Fix the broken 404 Yann LeCun MNIST URL by using the reliable AWS PyTorch mirror
+    sed -i 's|http://yann.lecun.com/exdb/mnist/|https://ossci-datasets.s3.amazonaws.com/mnist/|g' rssgen/generators/mnist_generator.py
     pip install -r requirements.txt
     echo "Generating MNMath dataset... this may take a moment."
     python -m rssgen examples_config/mnist.yml mnist ../../data/mnmath
