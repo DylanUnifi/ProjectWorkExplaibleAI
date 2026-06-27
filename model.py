@@ -768,7 +768,7 @@ class ResidualBlock(nn.Module):
         return F.relu(out)
 
 
-def _create_quantum_layer(n_qubits, n_layers=2, backend="lightning.qubit"):
+def _create_quantum_layer(n_qubits, n_layers=2, backend="lightning.gpu"):
     """Create PennyLane quantum layer."""
     dev = qml.device(backend, wires=n_qubits)
 

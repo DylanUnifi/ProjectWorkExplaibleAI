@@ -29,3 +29,6 @@ pennylane
 
 # Data analysis
 umap-learn
+
+pennylane-lightning-gpu
+cuquantum
