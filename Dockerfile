@@ -1,22 +1,45 @@
-FROM python:3.11-slim
+# Dockerfile for the XAI Comparative Study
+# ========================================
+# Base: NVIDIA CUDA 13.0 (compatible with your RTX 6000 Ada and 13.1 driver)
+#
+# Build : docker compose build
+# Run   : see docker-compose.yml
 
-WORKDIR /app
+FROM nvidia/cuda:13.0.0-runtime-ubuntu22.04
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    curl \
-    git \
+# Avoid prompts during apt install
+ENV DEBIAN_FRONTEND=noninteractive
+
+# ── System dependencies ───────────────────────────────────────────────
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        wget \
+        git \
+        libgl1 \
+        libglib2.0-0 \
+        python3 \
+        python3-pip \
     && rm -rf /var/lib/apt/lists/*
 
-# Install python dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Alias python to python3
+RUN ln -s /usr/bin/python3 /usr/bin/python
 
-# Copy the project files
+# ── Python dependencies ───────────────────────────────────────────────
+COPY requirements.txt .
+RUN pip install --upgrade pip && \
+    pip install torch torchvision --index-url https://download.pytorch.org/whl/cu130 && \
+    pip install -r requirements.txt
+
+# ── Workspace ──────────────────────────────────────────────────────────
+WORKDIR /app
+
+# ── Source code ────────────────────────────────────────────────────────
 COPY . .
+
+# ── Output directories ─────────────────────────────────────────────────
+RUN mkdir -p checkpoints
 
 # Set Python path so imports work correctly
 ENV PYTHONPATH=/app
 
-CMD ["python", "train_all_models.py"]
+# Default command
+CMD ["bash"]
