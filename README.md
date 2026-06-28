@@ -1,82 +1,59 @@
-# Comparative Study of Post-Hoc vs Inherent Explainability
+# XAI Comparative Study: Post-Hoc vs Inherent Explainability
 
 **Explainable Artificial Intelligence**  
-**MSc in Artificial Intelligence, University of Florence**  
+**MSc in Artificial Intelligence, University of Florence**
 
 ## Overview
-The objective of this project work is to test some explainability techniques (such as SHAP, LIME, and ProtoPNet) on 2 selected datasets, using 2 different neural architectures. The aim is to evaluate how these techniques behave when the models are trained on datasets containing explicit confounding factors.
+This repository contains the official codebase for the project work evaluating and comparing **Explainable AI (XAI)** techniques. The primary objective is to investigate the behavior of different neural architectures when trained on datasets containing explicit confounding factors (the *Clever Hans* effect).
 
-The selected datasets are:
-- **CLEVR-Hans3**: A visual reasoning dataset with specific class-confounder correlations.
-- **MNMath**: A mathematical visual reasoning dataset.
+We contrast **Post-Hoc Explainability** (SHAP, LIME) applied to black-box models against **Inherent Interpretability** (ProtoPNet). Additionally, we evaluate a **Hybrid Quantum Convolutional Neural Network (QCNN)** to assess the susceptibility of Quantum Machine Learning to confounding biases.
 
-## Implementation Details
-We test and evaluate both post-hoc methods and inherently interpretable architectures.
+### Datasets
+- **CLEVR-Hans3**: A visual reasoning dataset with specific class-confounder correlations injected into the background.
+- **MNMath**: A mathematical visual reasoning dataset serving as an unconfounded baseline.
 
-- **2 Neural Architectures**: 
-  - `ResNet-50` (Standard Convolutional Neural Network)
-  - `ViT` (Vision Transformer)
-- **Explainability Techniques**: 
-  - Post-hoc: SHAP and LIME applied to the black-box models.
-  - Inherent: `ProtoPNet` architecture, which explains its reasoning by dissecting images into prototypes.
-- **Bonus Architecture**: A `Hybrid QCNN` is included as an experimental quantum-classical model.
-- **Tracking**: Integrated with Weights & Biases for live monitoring of metrics and explanation maps.
-- **Hardware**: Multi-GPU support via `torch.nn.parallel.DistributedDataParallel` (DDP).
+### Architectures
+1. `ResNet-50` (Standard Convolutional Neural Network)
+2. `ViT` (Vision Transformer)
+3. `Hybrid QCNN` (Quantum Convolutional Neural Network - 8 Qubits)
+4. `ProtoPNet` (Inherently Interpretable Prototypical Part Network)
 
-## Logging Metrics
-All experimental runs, including Exploratory Data Analysis (EDA) and generated XAI attribution maps, are publicly logged on Weights & Biases:
-- **Project Tracking**: [WandB Project](https://wandb.ai/your-username/XAI_Comparative_Study)
+## Results & Tracking
+All experimental results, including training metrics, accuracy drops (Validation vs Test), generated SHAP/LIME attribution maps, infidelity scores, and ProtoPNet prototypes, are tracked and publicly available on Weights & Biases.
+
+**📊 View the complete results on W&B:** [XAI_Comparative_Study Dashboard](https://wandb.ai/dylan-fouepe-university-of-florence/XAI_Comparative_Study)
 
 ## Reproducibility
+This project is fully containerized using Docker to ensure strict academic reproducibility. No local Python environment setup is required. Hardware acceleration is supported natively.
 
-You can use the provided Docker environment to ensure strict reproducibility of all experimental results.
-
-### 1. Build Environment
+### 1. Build the Environment
+Clone the repository and build the Docker image:
 ```bash
 docker compose build
 ```
 
 ### 2. Exploratory Data Analysis (EDA)
-To analyze the dataset distributions and confounding factors:
+Analyze the dataset distributions and visually inspect the confounding factors:
 ```bash
 docker compose run --rm eda_clevr
 docker compose run --rm eda_mnmath
 ```
 
 ### 3. Model Training
-To train the respective architectures:
+Train the architectures on the CLEVR-Hans3 dataset. You can specify GPU visibility using the standard `CUDA_VISIBLE_DEVICES` environment variable:
 ```bash
-docker compose run --rm train_resnet50_clevr
-docker compose run --rm train_vit_clevr
-docker compose run --rm train_protopnet_clevr
+CUDA_VISIBLE_DEVICES=0 docker compose run --rm train_resnet50_clevr
+CUDA_VISIBLE_DEVICES=0 docker compose run --rm train_vit_clevr
+CUDA_VISIBLE_DEVICES=0 docker compose run --rm train_hybrid_qcnn_clevr
+CUDA_VISIBLE_DEVICES=0 docker compose run --rm train_protopnet_clevr
 ```
+*(To train on the MNMath baseline dataset, replace `_clevr` with `_mnmath` in the commands above).*
 
 ### 4. Explainability Evaluation
-To generate SHAP and LIME explanations and compute their fidelity scores:
+Generate SHAP and LIME explanations, compute their infidelity scores, and automatically log the attribution heatmaps to W&B:
 ```bash
-docker compose run --rm explain_resnet50_clevr
-docker compose run --rm explain_vit_clevr
+CUDA_VISIBLE_DEVICES=0 docker compose run --rm explain_resnet50_clevr
+CUDA_VISIBLE_DEVICES=0 docker compose run --rm explain_vit_clevr
+CUDA_VISIBLE_DEVICES=0 docker compose run --rm explain_hybrid_qcnn_clevr
 ```
-
-All experimental metrics, generated explanations, and training logs are automatically synchronized with Weights & Biases.
-
-## Experimental Results & Conclusions
-
-### 1. The Clever Hans Effect
-We successfully demonstrated the **Clever Hans effect** across different neural architectures on the confounded `CLEVR-Hans3` dataset. 
-- **ResNet50, ViT, and Hybrid QCNN** all achieved high validation accuracy (85%-95%) but suffered a massive performance drop (down to ~60-70%) on the unconfounded test set.
-- This confirms that "black-box" models, regardless of their underlying mechanisms (convolutions, attention, or quantum circuits), act as lazy optimizers that exploit spurious correlations (e.g., background color) instead of learning the true task rules.
-
-### 2. Post-Hoc Explainability (SHAP & LIME)
-By applying SHAP and LIME to the black-box models, we visualized *why* they failed on the test set:
-- The generated attribution maps clearly highlighted the gray background of the 3D scenes rather than the foreground objects.
-- LIME showed particularly high infidelity scores (approx. 19-23), indicating that while it correctly identified the background bias, the explanations for these highly confounded models were unstable.
-
-### 3. Inherent Interpretability (ProtoPNet)
-The **ProtoPNet** architecture proved superior in transparency. 
-- While it also learned the confounding bias on CLEVR-Hans3, it *self-explained* this behavior by generating explicit visual prototypes of the gray background during training. 
-- When trained on the unconfounded **MNMath** dataset, the ProtoPNet generated prototypes that correctly focused on the geometrical strokes of the mathematical digits. 
-- This confirms that inherently interpretable architectures provide direct, reliable insights into model reasoning without the computational overhead or instability of post-hoc explainers.
-
-### 4. Quantum Machine Learning (Hybrid QCNN)
-Our bonus experiment with a **Hybrid Quantum Convolutional Neural Network (8 Qubits)** revealed that quantum models are equally susceptible to confounding biases. The QCNN collapsed on the test set and its LIME maps confirmed a strong focus on the background. Increasing the number of qubits would drastically inflate computational cost and potentially exacerbate overfitting, demonstrating that solving the Clever Hans effect requires architectural changes (like ProtoPNet) rather than simply scaling classical or quantum capacity.
+*(Note: ProtoPNet does not require a post-hoc explain script as its interpretability is inherent and logged directly during the evaluation phase).*
