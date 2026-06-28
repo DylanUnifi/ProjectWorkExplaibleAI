@@ -162,6 +162,14 @@ services:
         --model vit
         --batch_size 8
 
+  explain_hybrid_qcnn_mnmath:
+    <<: *gpu-config
+    command: >
+      python explain.py
+        --dataset mnmath
+        --model hybrid_qcnn
+        --batch_size 8
+
   # ════════════════════════════════════════════════════════════════════
   # UTILITY
   # ════════════════════════════════════════════════════════════════════
