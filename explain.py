@@ -48,11 +48,11 @@ def main():
 
     print(f"Loading {args.dataset}...")
     if args.dataset == "clevr_hans3":
-        _, _, test_loader = get_clevr_hans_loaders(root_dir="./CLEVR-Hans3", batch_size=args.batch_size, max_samples=args.max_samples)
+        train_loader, _, test_loader = get_clevr_hans_loaders(root_dir="./CLEVR-Hans3", batch_size=args.batch_size, max_samples=args.max_samples)
         n_classes = 3
         in_channels = 3
     else:
-        _, _, test_loader = get_mnmath_loaders(batch_size=args.batch_size, max_samples=args.max_samples)
+        train_loader, _, test_loader = get_mnmath_loaders(batch_size=args.batch_size, max_samples=args.max_samples)
         n_classes = 2
         in_channels = 1
 
@@ -63,8 +63,8 @@ def main():
         return
 
     print("Running SHAP and LIME Explainers...")
-    shap_explainer = SHAPExplainer(model, args.device)
-    lime_explainer = LIMEExplainer(model, args.device)
+    shap_explainer = SHAPExplainer(model, train_loader)
+    lime_explainer = LIMEExplainer(model, n_classes=n_classes)
     metrics_calc = XAIMetrics(model, args.device)
 
     for i, batch in enumerate(tqdm(test_loader, desc="Generating Explanations")):
