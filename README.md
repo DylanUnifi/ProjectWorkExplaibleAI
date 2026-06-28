@@ -59,3 +59,24 @@ docker compose run --rm explain_vit_clevr
 ```
 
 All experimental metrics, generated explanations, and training logs are automatically synchronized with Weights & Biases.
+
+## Experimental Results & Conclusions
+
+### 1. The Clever Hans Effect
+We successfully demonstrated the **Clever Hans effect** across different neural architectures on the confounded `CLEVR-Hans3` dataset. 
+- **ResNet50, ViT, and Hybrid QCNN** all achieved high validation accuracy (85%-95%) but suffered a massive performance drop (down to ~60-70%) on the unconfounded test set.
+- This confirms that "black-box" models, regardless of their underlying mechanisms (convolutions, attention, or quantum circuits), act as lazy optimizers that exploit spurious correlations (e.g., background color) instead of learning the true task rules.
+
+### 2. Post-Hoc Explainability (SHAP & LIME)
+By applying SHAP and LIME to the black-box models, we visualized *why* they failed on the test set:
+- The generated attribution maps clearly highlighted the gray background of the 3D scenes rather than the foreground objects.
+- LIME showed particularly high infidelity scores (approx. 19-23), indicating that while it correctly identified the background bias, the explanations for these highly confounded models were unstable.
+
+### 3. Inherent Interpretability (ProtoPNet)
+The **ProtoPNet** architecture proved superior in transparency. 
+- While it also learned the confounding bias on CLEVR-Hans3, it *self-explained* this behavior by generating explicit visual prototypes of the gray background during training. 
+- When trained on the unconfounded **MNMath** dataset, the ProtoPNet generated prototypes that correctly focused on the geometrical strokes of the mathematical digits. 
+- This confirms that inherently interpretable architectures provide direct, reliable insights into model reasoning without the computational overhead or instability of post-hoc explainers.
+
+### 4. Quantum Machine Learning (Hybrid QCNN)
+Our bonus experiment with a **Hybrid Quantum Convolutional Neural Network (8 Qubits)** revealed that quantum models are equally susceptible to confounding biases. The QCNN collapsed on the test set and its LIME maps confirmed a strong focus on the background. Increasing the number of qubits would drastically inflate computational cost and potentially exacerbate overfitting, demonstrating that solving the Clever Hans effect requires architectural changes (like ProtoPNet) rather than simply scaling classical or quantum capacity.
