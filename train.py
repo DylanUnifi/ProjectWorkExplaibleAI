@@ -102,6 +102,11 @@ def main():
         os.makedirs("checkpoints", exist_ok=True)
         torch.save(model.state_dict(), f"checkpoints/{args.model}_{args.dataset}_best.pth")
         print("Saved final ProtoPNet model!")
+        
+        # Visualize and save the learned prototypes
+        print("Generating and saving prototypes visualizations...")
+        model.visualize_prototypes(train_loader, args.device, save_dir=f"prototypes_{args.dataset}")
+        print(f"Prototypes saved to prototypes_{args.dataset}/ directory!")
     else:
         optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
         
