@@ -74,11 +74,11 @@ def main():
         shap_attrs = shap_explainer.explain(images, labels)
         lime_attrs = lime_explainer.explain(images, labels)
         
-        # Calculate fidelity
-        shap_fidelity = metrics_calc.fidelity(images, shap_attrs, labels, k=10)
-        lime_fidelity = metrics_calc.fidelity(images, lime_attrs, labels, k=10)
+        # Calculate infidelity
+        shap_infidelity = metrics_calc.infidelity(images, shap_attrs, labels, n_samples=10)
+        lime_infidelity = metrics_calc.infidelity(images, lime_attrs, labels, n_samples=10)
         
-        wandb.log({"shap_fidelity": shap_fidelity, "lime_fidelity": lime_fidelity})
+        wandb.log({"shap_infidelity": shap_infidelity, "lime_infidelity": lime_infidelity})
         
         # Visualize first image in batch
         fig = plot_attribution_comparison(
