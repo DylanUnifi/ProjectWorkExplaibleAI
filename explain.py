@@ -63,7 +63,7 @@ def main():
         return
 
     print("Running SHAP and LIME Explainers...")
-    shap_explainer = SHAPExplainer(model, train_loader)
+    shap_explainer = SHAPExplainer(model, train_loader, method="gradient")
     lime_explainer = LIMEExplainer(model, n_classes=n_classes)
     metrics_calc = XAIMetrics(model, args.device)
 
