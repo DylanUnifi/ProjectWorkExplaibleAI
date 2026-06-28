@@ -19,6 +19,8 @@ Thumbs.db
 # Data and Datasets
 data/
 scratch_rsbench/
+CLEVR-Hans3/
+prototypes_*/
 
 # Model Checkpoints & Weights
 checkpoints/
