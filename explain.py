@@ -24,7 +24,7 @@ def load_model(args, n_classes, in_channels):
     if args.model == "resnet50":
         model = ResNet50Classifier(n_classes=n_classes, input_channels=in_channels)
     elif args.model == "vit":
-        model = ViTClassifier(n_classes=n_classes, pretrained=False)
+        model = ViTClassifier(n_classes=n_classes, pretrained=False, input_channels=in_channels)
     elif args.model == "protopnet":
         model = ProtoPNet(num_classes=n_classes, num_prototypes=n_classes*10)
     elif args.model == "hybrid_qcnn":
