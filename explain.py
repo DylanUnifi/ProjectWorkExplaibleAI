@@ -80,17 +80,18 @@ def main():
         
         wandb.log({"shap_infidelity": shap_infidelity, "lime_infidelity": lime_infidelity})
         
-        # Visualize first image in batch
-        fig = plot_attribution_comparison(
-            images[0].cpu().numpy(),
-            shap_attrs[0],
-            lime_attrs[0],
-            title=f"Label: {labels[0].item()}"
-        )
-        wandb.log({f"Explanation_Batch_{i}": wandb.Image(fig)})
+        import os
+        os.makedirs("explanations", exist_ok=True)
+        save_path = f"explanations/{args.model}_{args.dataset}_batch_{i}.png"
         
-        import matplotlib.pyplot as plt
-        plt.close(fig)
+        # Visualize first image in batch
+        plot_attribution_comparison(
+            images[0],
+            {"SHAP": shap_attrs[0], "LIME": lime_attrs[0]},
+            save_path=save_path,
+            true_label=labels[0].item()
+        )
+        wandb.log({f"Explanation_Batch_{i}": wandb.Image(save_path)})
 
     wandb.finish()
     print("Explanations complete and logged to W&B!")
