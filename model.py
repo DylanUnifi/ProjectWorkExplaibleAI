@@ -629,6 +629,18 @@ class ProtoPNet(nn.Module):
                     plt.tight_layout()
                     plt.savefig(save_dir / f"prototype_{p}.png", dpi=150)
                     plt.close()
+        
+        # Log to wandb if a run is active
+        try:
+            import wandb
+            if wandb.run is not None:
+                wandb.log({
+                    "prototypes": [wandb.Image(str(save_dir / f"prototype_{p}.png"), caption=f"Prototype {p}") 
+                                 for p in range(self.n_prototypes) if (save_dir / f"prototype_{p}.png").exists()]
+                })
+                print("Prototypes successfully logged to W&B!")
+        except ImportError:
+            pass
 
 
 def evaluate_model(model, dataloader, device):
