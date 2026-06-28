@@ -37,56 +37,59 @@ class LIMEExplainer:
         
         return probs.cpu().numpy()
     
-    def explain(self, image, top_labels=1, num_samples=1000, num_features=10):
+    def explain(self, images, labels=None, top_labels=1, num_samples=1000, num_features=10):
         """
-        Explain a single image.
+        Explain a batch of images.
         
         Args:
-            image: (C, H, W) tensor [0, 1]
+            images: (B, C, H, W) tensor [0, 1]
+            labels: Optional ground truth labels
             top_labels: Number of top classes to explain
             num_samples: Number of perturbed samples for LIME
             num_features: Number of superpixels in explanation
         
         Returns:
-            explanation: LIME Explanation object
-            mask: Binary mask of important regions
+            masks: Tensor of shape (B, 1, H, W) containing LIME masks
         """
-        # Convert to numpy (H, W, C) [0, 255]
-        img_np = (image.permute(1, 2, 0).detach().cpu().numpy() * 255).astype(np.uint8)
-        
-        # Custom segmentation for MNMath (32x128 grid)
-        # We know MNMath has 4 digits side-by-side, each 32x32.
-        # Quickshift/SLIC struggle heavily with binary black-background images.
-        if img_np.shape[0] == 32 and img_np.shape[1] == 128:
-            def custom_segmentation(img):
-                segments = np.zeros(img.shape[:2], dtype=int)
-                for i in range(4):
-                    segments[:, i*32:(i+1)*32] = i
-                return segments
-            segmentation_fn = custom_segmentation
-        else:
-            segmentation_fn = None
-        
-        # Explain
-        explanation = self.explainer.explain_instance(
-            img_np,
-            self._predict_fn,
-            top_labels=top_labels,
-            hide_color=0,
-            num_samples=num_samples,
-            batch_size=32,
-            segmentation_fn=segmentation_fn,
-        )
-        
-        # Get mask for top class
-        temp, mask = explanation.get_image_and_mask(
-            explanation.top_labels[0],
-            positive_only=True,
-            num_features=num_features,
-            hide_rest=False,
-        )
-        
-        return explanation, torch.from_numpy(mask).float()
+        batch_masks = []
+        for i in range(images.size(0)):
+            image = images[i]
+            
+            # Convert to numpy (H, W, C) [0, 255]
+            img_np = (image.permute(1, 2, 0).detach().cpu().numpy() * 255).astype(np.uint8)
+            
+            # Custom segmentation for MNMath (32x128 grid)
+            if img_np.shape[0] == 32 and img_np.shape[1] == 128:
+                def custom_segmentation(img):
+                    segments = np.zeros(img.shape[:2], dtype=int)
+                    for j in range(4):
+                        segments[:, j*32:(j+1)*32] = j
+                    return segments
+                segmentation_fn = custom_segmentation
+            else:
+                segmentation_fn = None
+                
+            # Explain
+            explanation = self.explainer.explain_instance(
+                img_np,
+                self._predict_fn,
+                top_labels=top_labels,
+                hide_color=0,
+                num_samples=num_samples,
+                batch_size=32,
+                segmentation_fn=segmentation_fn,
+            )
+            
+            # Get mask for top class
+            temp, mask = explanation.get_image_and_mask(
+                explanation.top_labels[0],
+                positive_only=True,
+                num_features=num_features,
+                hide_rest=False,
+            )
+            batch_masks.append(torch.from_numpy(mask).float().unsqueeze(0))
+            
+        return torch.stack(batch_masks, dim=0).to(self.device)  # (B, 1, H, W)
     
     def visualize(self, image, explanation, save_path=None):
         """Visualize LIME explanation."""
