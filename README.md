@@ -24,7 +24,7 @@ All experimental results, including training metrics, accuracy drops (Validation
 **📊 View the complete results on W&B:** [XAI_Comparative_Study Dashboard](https://wandb.ai/dylan-fouepe-university-of-florence/XAI_Comparative_Study)
 
 ## Reproducibility
-This project can beis fully containerized using Docker to ensure strict reproducibility. No local Python environment setup is required. Hardware acceleration is supported natively.
+This project can be fully containerized using Docker to ensure strict reproducibility. No local Python environment setup is required. Hardware acceleration is supported natively.
 
 ### 1. Build the Environment
 Clone the repository and build the Docker image:
