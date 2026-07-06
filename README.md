@@ -24,7 +24,7 @@ All experimental results, including training metrics, accuracy drops (Validation
 **📊 View the complete results on W&B:** [XAI_Comparative_Study Dashboard](https://wandb.ai/dylan-fouepe-university-of-florence/XAI_Comparative_Study)
 
 ## Reproducibility
-This project is fully containerized using Docker to ensure strict academic reproducibility. No local Python environment setup is required. Hardware acceleration is supported natively.
+This project can beis fully containerized using Docker to ensure strict reproducibility. No local Python environment setup is required. Hardware acceleration is supported natively.
 
 ### 1. Build the Environment
 Clone the repository and build the Docker image:
@@ -42,18 +42,18 @@ docker compose run --rm eda_mnmath
 ### 3. Model Training
 Train the architectures on the CLEVR-Hans3 dataset. You can specify GPU visibility using the standard `CUDA_VISIBLE_DEVICES` environment variable:
 ```bash
-CUDA_VISIBLE_DEVICES=0 docker compose run --rm train_resnet50_clevr
-CUDA_VISIBLE_DEVICES=0 docker compose run --rm train_vit_clevr
-CUDA_VISIBLE_DEVICES=0 docker compose run --rm train_hybrid_qcnn_clevr
-CUDA_VISIBLE_DEVICES=0 docker compose run --rm train_protopnet_clevr
+CUDA_VISIBLE_DEVICES=N docker compose run --rm train_resnet50_clevr
+CUDA_VISIBLE_DEVICES=N docker compose run --rm train_vit_clevr
+CUDA_VISIBLE_DEVICES=N docker compose run --rm train_hybrid_qcnn_clevr
+CUDA_VISIBLE_DEVICES=N docker compose run --rm train_protopnet_clevr
 ```
 *(To train on the MNMath baseline dataset, replace `_clevr` with `_mnmath` in the commands above).*
 
 ### 4. Explainability Evaluation
 Generate SHAP and LIME explanations, compute their infidelity scores, and automatically log the attribution heatmaps to W&B:
 ```bash
-CUDA_VISIBLE_DEVICES=0 docker compose run --rm explain_resnet50_clevr
-CUDA_VISIBLE_DEVICES=0 docker compose run --rm explain_vit_clevr
-CUDA_VISIBLE_DEVICES=0 docker compose run --rm explain_hybrid_qcnn_clevr
+CUDA_VISIBLE_DEVICES=N docker compose run --rm explain_resnet50_clevr
+CUDA_VISIBLE_DEVICES=N docker compose run --rm explain_vit_clevr
+CUDA_VISIBLE_DEVICES=N docker compose run --rm explain_hybrid_qcnn_clevr
 ```
 *(Note: ProtoPNet does not require a post-hoc explain script as its interpretability is inherent and logged directly during the evaluation phase).*
