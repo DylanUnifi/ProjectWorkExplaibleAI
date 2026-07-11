@@ -340,7 +340,7 @@ def get_clevr_hans_loaders(
     root_dir,
     variant="clevr_hans3",
     batch_size=64,
-    num_workers=8,
+    num_workers=16,
     train_augmentation=False,
     max_samples=None,
 ):
@@ -524,7 +524,7 @@ class MNMathDataset(Dataset):
 def get_mnmath_loaders(
     root_dir="./data/mnmath",
     batch_size=32,
-    num_workers=4,
+    num_workers=16,
     pin_memory=True,
     image_size=(32, 128), # typical size for MNMath concatenation
     max_samples=None,

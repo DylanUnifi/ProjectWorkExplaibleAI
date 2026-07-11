@@ -13,7 +13,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", type=str, required=True, choices=["resnet50", "vit", "protopnet", "hybrid_qcnn"])
     parser.add_argument("--dataset", type=str, required=True, choices=["clevr_hans3", "mnmath"])
-    parser.add_argument("--batch_size", type=int, default=32)
+    parser.add_argument("--batch_size", type=int, default=512)
     parser.add_argument("--epochs", type=int, default=10)
     parser.add_argument("--lr", type=float, default=1e-4)
     parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu")
@@ -110,14 +110,7 @@ def main():
     else:
         optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
         
-        # Add class weights based on EDA results
-        if args.dataset == "mnmath":
-            # Class 0: ~250 samples, Class 1: ~700 samples (Ratio roughly 3:1)
-            # Weights are inversely proportional to class frequencies
-            weights = torch.tensor([3.0, 1.0]).to(args.device)
-            criterion = nn.CrossEntropyLoss(weight=weights)
-        else:
-            criterion = nn.CrossEntropyLoss()
+        criterion = nn.CrossEntropyLoss()
         
         best_acc = 0
         for epoch in range(args.epochs):
