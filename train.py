@@ -67,7 +67,7 @@ def main():
         in_channels = 3
     else:
         train_loader, val_loader, test_loader = get_mnmath_loaders(batch_size=args.batch_size)
-        n_classes = 2
+        n_classes = 19
         in_channels = 1
 
     # 2. Build Model

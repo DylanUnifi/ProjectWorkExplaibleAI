@@ -52,7 +52,7 @@ class ResNet50Classifier(nn.Module):
         # Load pretrained ResNet-50
         self.backbone = models.resnet50(weights=ResNet50_Weights.IMAGENET1K_V1 if pretrained else None)
         
-        if input_channels != 3 or n_classes == 2:
+        if input_channels != 3 or n_classes == 19:
             self.backbone.conv1 = nn.Conv2d(input_channels, 64, kernel_size=3, stride=1, padding=1, bias=False)
             self.backbone.maxpool = nn.Identity()
         
@@ -358,7 +358,7 @@ class ProtoPNet(nn.Module):
             else:
                 resnet = models.resnet50(weights=None)
                 
-            if input_channels != 3 or n_classes == 2:
+            if input_channels != 3 or n_classes == 19:
                 resnet.conv1 = nn.Conv2d(input_channels, 64, kernel_size=3, stride=1, padding=1, bias=False)
                 resnet.maxpool = nn.Identity()
             

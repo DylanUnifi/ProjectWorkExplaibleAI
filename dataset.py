@@ -477,10 +477,9 @@ class MNMathDataset(Dataset):
             # Assuming labels is a list of bools, we take the primary label (e.g. data["label"][0]).
             label_data = data["label"]
             if isinstance(label_data, list) or isinstance(label_data, np.ndarray):
-                # MNMath usually has single overall equation truth value or digit sums.
-                # In rsseval, converted_labels = [bool(l) for l in label].
-                # We'll use the first one as the primary class index for the models.
-                primary_label = int(bool(label_data[0]))
+                # MNMath RSBench returns the sum of digits.
+                # We extract the sum directly to enable multi-class prediction (0-18).
+                primary_label = int(label_data[0])
             else:
                 primary_label = int(label_data)
                 

@@ -53,7 +53,7 @@ def main():
         in_channels = 3
     else:
         train_loader, _, test_loader = get_mnmath_loaders(batch_size=args.batch_size, max_samples=args.max_samples)
-        n_classes = 2
+        n_classes = 19
         in_channels = 1
 
     model = load_model(args, n_classes, in_channels)
