@@ -58,8 +58,8 @@ services:
       python train.py
         --dataset clevr_hans3
         --model resnet50
-        --epochs 20
-        --batch_size 32
+        --epochs 100
+        --batch_size 512
 
   train_vit_clevr:
     <<: *gpu-config
@@ -67,8 +67,8 @@ services:
       python train.py
         --dataset clevr_hans3
         --model vit
-        --epochs 20
-        --batch_size 16
+        --epochs 100
+        --batch_size 512
 
   train_protopnet_clevr:
     <<: *gpu-config
@@ -76,8 +76,8 @@ services:
       python train.py
         --dataset clevr_hans3
         --model protopnet
-        --epochs 20
-        --batch_size 32
+        --epochs 100
+        --batch_size 512
 
   train_hybrid_qcnn_clevr:
     <<: *gpu-config
@@ -85,8 +85,8 @@ services:
       python train.py
         --dataset clevr_hans3
         --model hybrid_qcnn
-        --epochs 10
-        --batch_size 32
+        --epochs 100
+        --batch_size 512
 
 
   # ════════════════════════════════════════════════════════════════════
@@ -99,7 +99,7 @@ services:
       python explain.py
         --dataset clevr_hans3
         --model resnet50
-        --batch_size 16
+        --batch_size 512
 
   explain_vit_clevr:
     <<: *gpu-config
@@ -107,7 +107,7 @@ services:
       python explain.py
         --dataset clevr_hans3
         --model vit
-        --batch_size 8
+        --batch_size 512
 
   explain_hybrid_qcnn_clevr:
     <<: *gpu-config
@@ -115,7 +115,7 @@ services:
       python explain.py
         --dataset clevr_hans3
         --model hybrid_qcnn
-        --batch_size 8
+        --batch_size 512
 
   # MNMath Training Services
   train_resnet50_mnmath:
@@ -124,8 +124,8 @@ services:
       python train.py
         --dataset mnmath
         --model resnet50
-        --epochs 20
-        --batch_size 32
+        --epochs 100
+        --batch_size 512
 
   train_vit_mnmath:
     <<: *gpu-config
@@ -133,8 +133,8 @@ services:
       python train.py
         --dataset mnmath
         --model vit
-        --epochs 20
-        --batch_size 16
+        --epochs 100
+        --batch_size 512
 
   train_protopnet_mnmath:
     <<: *gpu-config
@@ -142,8 +142,8 @@ services:
       python train.py
         --dataset mnmath
         --model protopnet
-        --epochs 20
-        --batch_size 32
+        --epochs 100
+        --batch_size 512
 
   train_hybrid_qcnn_mnmath:
     <<: *gpu-config
@@ -151,8 +151,8 @@ services:
       python train.py
         --dataset mnmath
         --model hybrid_qcnn
-        --epochs 10
-        --batch_size 32
+        --epochs 100
+        --batch_size 512
 
   # MNMath Explain Services
   explain_resnet50_mnmath:
@@ -161,7 +161,7 @@ services:
       python explain.py
         --dataset mnmath
         --model resnet50
-        --batch_size 16
+        --batch_size 512
 
   explain_vit_mnmath:
     <<: *gpu-config
@@ -169,7 +169,7 @@ services:
       python explain.py
         --dataset mnmath
         --model vit
-        --batch_size 8
+        --batch_size 512
 
   explain_hybrid_qcnn_mnmath:
     <<: *gpu-config
@@ -177,7 +177,7 @@ services:
       python explain.py
         --dataset mnmath
         --model hybrid_qcnn
-        --batch_size 8
+        --batch_size 512
 
   # ════════════════════════════════════════════════════════════════════
   # UTILITY
