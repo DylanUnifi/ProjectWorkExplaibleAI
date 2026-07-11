@@ -27,7 +27,6 @@ RUN ln -s /usr/bin/python3 /usr/bin/python
 # ── Python dependencies ───────────────────────────────────────────────
 COPY requirements.txt .
 RUN pip install --upgrade pip && \
-    pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124 && \
     pip install -r requirements.txt
 
 # ── Workspace ──────────────────────────────────────────────────────────
