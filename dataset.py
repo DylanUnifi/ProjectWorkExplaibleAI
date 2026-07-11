@@ -275,12 +275,8 @@ class CLE4EVRDataset(Dataset):
         if self.transform:
             image = self.transform(image)
 
-        if "class_id" in scene:
-            label = scene["class_id"]
-        elif "class" in scene:
-            label = scene["class"]
-        else:
-            label = self._compute_label(scene.get("objects", []))
+        # Force compute CLE4EVR rule (ignore CLEVR-Hans class_id if present)
+        label = self._compute_label(scene.get("objects", []))
 
         return {
             "image": image,
