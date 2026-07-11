@@ -23,7 +23,7 @@ x-gpu-config: &gpu-config
   environment:
     - WANDB_API_KEY=${WANDB_API_KEY:-}
     - WANDB_MODE=online
-    - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-all}
+    - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES}
 
 services:
   builder:
