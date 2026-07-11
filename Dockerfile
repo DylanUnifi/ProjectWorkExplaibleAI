@@ -28,7 +28,7 @@ RUN ln -s /usr/bin/python3 /usr/bin/python
 ENV PIP_BREAK_SYSTEM_PACKAGES=1
 COPY requirements.txt .
 RUN pip install --upgrade pip && \
-    pip install torch torchvision --index-url https://download.pytorch.org/whl/cu132 && \
+    pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124 && \
     pip install -r requirements.txt
 
 # ── Workspace ──────────────────────────────────────────────────────────
