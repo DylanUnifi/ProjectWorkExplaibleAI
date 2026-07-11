@@ -37,7 +37,7 @@ services:
     <<: *gpu-config
     command: >
       python eda.py
-        --dataset clevr_hans3
+        --dataset cle4evr
         --max_samples 2000
 
   eda_mnmath:
@@ -55,7 +55,7 @@ services:
     <<: *gpu-config
     command: >
       python train.py
-        --dataset clevr_hans3
+        --dataset cle4evr
         --model resnet50
         --epochs 100
         --batch_size 512
@@ -64,7 +64,7 @@ services:
     <<: *gpu-config
     command: >
       python train.py
-        --dataset clevr_hans3
+        --dataset cle4evr
         --model vit
         --epochs 100
         --batch_size 512
@@ -73,7 +73,7 @@ services:
     <<: *gpu-config
     command: >
       python train.py
-        --dataset clevr_hans3
+        --dataset cle4evr
         --model protopnet
         --epochs 100
         --batch_size 128
@@ -82,7 +82,7 @@ services:
     <<: *gpu-config
     command: >
       python train.py
-        --dataset clevr_hans3
+        --dataset cle4evr
         --model hybrid_qcnn
         --epochs 100
         --batch_size 512
@@ -96,7 +96,7 @@ services:
     <<: *gpu-config
     command: >
       python explain.py
-        --dataset clevr_hans3
+        --dataset cle4evr
         --model resnet50
         --batch_size 512
 
@@ -104,7 +104,7 @@ services:
     <<: *gpu-config
     command: >
       python explain.py
-        --dataset clevr_hans3
+        --dataset cle4evr
         --model vit
         --batch_size 512
 
@@ -112,7 +112,7 @@ services:
     <<: *gpu-config
     command: >
       python explain.py
-        --dataset clevr_hans3
+        --dataset cle4evr
         --model hybrid_qcnn
         --batch_size 512
 
