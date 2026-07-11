@@ -5,7 +5,7 @@
 # Build : docker compose build
 # Run   : see docker-compose.yml
 
-FROM nvidia/cuda:13.0.0-runtime-ubuntu22.04
+FROM nvidia/cuda:13.3.0-runtime-ubuntu24.04
 
 # Avoid prompts during apt install
 ENV DEBIAN_FRONTEND=noninteractive
@@ -27,7 +27,7 @@ RUN ln -s /usr/bin/python3 /usr/bin/python
 # ── Python dependencies ───────────────────────────────────────────────
 COPY requirements.txt .
 RUN pip install --upgrade pip && \
-    pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124 && \
+    pip install torch torchvision --index-url https://download.pytorch.org/whl/cu132 && \
     pip install -r requirements.txt
 
 # ── Workspace ──────────────────────────────────────────────────────────
