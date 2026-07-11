@@ -204,6 +204,90 @@ CLEVR_HANS_CONFOUNDERS = {
     },
 }
 
+class CLE4EVRDataset(Dataset):
+    """
+    CLE4EVR Dataset Loader.
+    Images are 240x320.
+    Binary classification: positive if exists two objects with same color and shape.
+    """
+    def __init__(self, root_dir, split="train", transform=None):
+        self.root_dir = Path(root_dir)
+        self.split = split
+        self.transform = transform
+        self.n_classes = 2
+
+        scenes_dir = self.root_dir / split / "scenes"
+        self.scenes = []
+
+        if scenes_dir.is_dir():
+            scene_files = sorted(scenes_dir.glob("*.json"))
+            aggregated = [sf for sf in scene_files if "scenes" in sf.stem and "_classid_" not in sf.stem]
+            files_to_load = aggregated if aggregated else scene_files
+            if len(files_to_load) == 1:
+                with open(files_to_load[0], "r") as f:
+                    data = json.load(f)
+                    self.scenes = data.get("scenes", data)
+            else:
+                for sf in files_to_load:
+                    with open(sf, "r") as f:
+                        data = json.load(f)
+                        if "scenes" in data:
+                            self.scenes.extend(data["scenes"])
+                        elif isinstance(data, list):
+                            self.scenes.extend(data)
+                        else:
+                            self.scenes.append(data)
+        else:
+            fallback_path = self.root_dir / "scenes" / f"{split}_scenes.json"
+            if fallback_path.exists():
+                with open(fallback_path, "r") as f:
+                    data = json.load(f)
+                    self.scenes = data.get("scenes", data)
+
+        self.images_dir = self.root_dir / split / "images"
+        if not self.images_dir.is_dir():
+            self.images_dir = self.root_dir / "images" / split
+
+        print(f"CLE4EVR {split}: {len(self.scenes)} images")
+
+    def __len__(self):
+        return len(self.scenes)
+
+    def _compute_label(self, objects):
+        # positive iff at least two objects have the same color and shape
+        for i in range(len(objects)):
+            for j in range(i + 1, len(objects)):
+                if objects[i].get("color") == objects[j].get("color") and objects[i].get("shape") == objects[j].get("shape"):
+                    return 1
+        return 0
+
+    def __getitem__(self, idx):
+        scene = self.scenes[idx]
+        img_filename = scene.get("image_filename", f"CLE4EVR_{self.split}_{idx:06d}.png")
+        img_path = self.images_dir / img_filename
+        
+        # Fallback if image has a different name
+        if not img_path.exists():
+            img_filename = scene.get("image_filename", f"CLEVR_HANS_{self.split}_{idx:06d}.png")
+            img_path = self.images_dir / img_filename
+
+        image = Image.open(img_path).convert("RGB")
+        if self.transform:
+            image = self.transform(image)
+
+        if "class_id" in scene:
+            label = scene["class_id"]
+        elif "class" in scene:
+            label = scene["class"]
+        else:
+            label = self._compute_label(scene.get("objects", []))
+
+        return {
+            "image": image,
+            "label": torch.tensor(label, dtype=torch.long),
+        }
+
+
 
 class CLEVRHansDataset(Dataset):
     """
@@ -477,19 +561,20 @@ class MNMathDataset(Dataset):
             # Assuming labels is a list of bools, we take the primary label (e.g. data["label"][0]).
             label_data = data["label"]
             if isinstance(label_data, list) or isinstance(label_data, np.ndarray):
-                # MNMath RSBench returns the sum of digits.
-                # We extract the sum directly to enable multi-class prediction (0-18).
-                primary_label = int(label_data[0])
+                label_vec = np.array(label_data).astype(np.int64)
             else:
-                primary_label = int(label_data)
+                label_vec = np.array([label_data]).astype(np.int64)
                 
-            self.labels.append(primary_label)
+            self.labels.append(label_vec)
             
             concept_values = data["meta"]["concepts"]
-            concepts = np.array(concept_values).astype(np.int64)
+            concepts = np.array(concept_values).astype(np.int64).flatten()
             self.concepts.append(concepts)
             
         self.list_images = new_images
+        
+        self.num_equations = len(self.labels[0]) if len(self.labels) > 0 else 0
+        self.num_concepts = len(self.concepts[0]) if len(self.concepts) > 0 else 0
         
         print(f"MNMath {split}: {len(self.list_images)} images loaded.")
         
@@ -507,13 +592,14 @@ class MNMathDataset(Dataset):
         if self.transform:
             image = self.transform(image)
             
-        label = self.labels[idx]
-        concepts = self.concepts[idx]
+        label = torch.tensor(self.labels[idx], dtype=torch.long)
+        concepts = torch.tensor(self.concepts[idx], dtype=torch.long)
         
         # Format identical to CLEVR-Hans for compatibility with train_all_models.py
         return {
             "image": image,
             "label": label,
+            "concepts": concepts,
             "group": 0,  # default
             "scene": {"concepts": concepts.tolist()},
             "confounder_info": {},
@@ -572,9 +658,11 @@ def get_mnmath_loaders(
             num_workers=num_workers, pin_memory=pin_memory,
             persistent_workers=(num_workers > 0), prefetch_factor=2 if num_workers > 0 else None
         )
-        return train_loader, val_loader, test_loader
+        num_equations = train_dataset.num_equations if hasattr(train_dataset, "num_equations") else train_dataset.dataset.num_equations
+        num_concepts = train_dataset.num_concepts if hasattr(train_dataset, "num_concepts") else train_dataset.dataset.num_concepts
+        return train_loader, val_loader, test_loader, num_equations, num_concepts
     except Exception as e:
         print(f"Warning: MNMath dataset not found or missing dependency: {e}. Returning empty loaders.")
-        return None, None, None
+        return None, None, None, 0, 0
 
 

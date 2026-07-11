@@ -46,8 +46,12 @@ class ResNet50Classifier(nn.Module):
     Optimized for AMP (Tensor Cores) and SHAP compatibility.
     """
     
-    def __init__(self, n_classes=3, input_channels=3, pretrained=True, freeze_backbone=False):
+    def __init__(self, n_classes=3, input_channels=3, pretrained=True, freeze_backbone=False, num_equations=1, num_concepts=0):
         super().__init__()
+        
+        self.num_equations = num_equations
+        self.n_classes = n_classes
+        self.num_concepts = num_concepts
         
         # Load pretrained ResNet-50
         self.backbone = models.resnet50(weights=ResNet50_Weights.IMAGENET1K_V1 if pretrained else None)
@@ -74,7 +78,12 @@ class ResNet50Classifier(nn.Module):
         
         # Replace final FC
         num_features = self.backbone.fc.in_features
-        self.backbone.fc = nn.Linear(num_features, n_classes)
+        self.backbone.fc = nn.Linear(num_features, n_classes * max(1, num_equations))
+        
+        if self.num_concepts > 0:
+            self.concept_head = nn.Linear(num_features, self.num_concepts * 10)
+        else:
+            self.concept_head = None
         
         # Store intermediate activations for GradCAM
         self.activations = {}
@@ -108,10 +117,21 @@ class ResNet50Classifier(nn.Module):
         
         # Classification
         logits = self.backbone.fc(features)
+        if self.num_equations > 1:
+            logits = logits.view(features.size(0), self.num_equations, self.n_classes)
+            
+        concept_logits = None
+        if self.concept_head is not None:
+            concept_logits = self.concept_head(features).view(features.size(0), self.num_concepts, 10)
         
-        if return_features:
-            return logits, features
-        return logits
+        if self.num_concepts > 0 or self.num_equations > 1:
+            if return_features:
+                return logits, features, concept_logits
+            return logits, concept_logits
+        else:
+            if return_features:
+                return logits, features
+            return logits
     
     def get_gradcam_weights(self):
         if 'layer4' not in self.activations or 'layer4' not in self.gradients:
@@ -142,29 +162,37 @@ class ViTClassifier(nn.Module):
     Utilise HuggingFace Transformers (optimisé, facile).
     """
     
-    def __init__(self, n_classes=3, pretrained=True, image_size=224, input_channels=3):
+    def __init__(self, n_classes=3, pretrained=True, image_size=224, input_channels=3, num_equations=1, num_concepts=0):
         super().__init__()
         
         self.input_channels = input_channels
+        self.n_classes = n_classes
+        self.num_equations = num_equations
+        self.num_concepts = num_concepts
         
         if pretrained:
             # Load pretrained ViT (ImageNet)
             self.vit = ViTForImageClassification.from_pretrained(
                 "google/vit-base-patch16-224-in21k",
-                num_labels=n_classes,
+                num_labels=n_classes * max(1, num_equations),
                 ignore_mismatched_sizes=True,
             )
         else:
             # Train from scratch
             config = ViTConfig(
                 image_size=image_size,
-                num_labels=n_classes,
+                num_labels=n_classes * max(1, num_equations),
                 hidden_size=768,
                 num_hidden_layers=12,
                 num_attention_heads=12,
                 intermediate_size=3072,
             )
             self.vit = ViTForImageClassification(config)
+            
+        if self.num_concepts > 0:
+            self.concept_head = nn.Linear(self.vit.config.hidden_size, self.num_concepts * 10)
+        else:
+            self.concept_head = None
         
         # Store attention weights
         self.attention_weights = []
@@ -193,17 +221,29 @@ class ViTClassifier(nn.Module):
             pixel_values=x,
             output_attentions=output_attentions,
             return_dict=True,
+            output_hidden_states=(self.num_concepts > 0),
         )
         
         logits = outputs.logits
-        
-        if output_attentions:
-            # attentions: Tuple of (B, n_heads, n_patches+1, n_patches+1)
-            # +1 for [CLS] token
-            self.attention_weights = outputs.attentions
-            return logits, outputs.attentions
-        
-        return logits
+        if self.num_equations > 1:
+            logits = logits.view(x.size(0), self.num_equations, self.n_classes)
+            
+        concept_logits = None
+        if self.concept_head is not None:
+            # CLS token representation from the last hidden state
+            cls_token_state = outputs.hidden_states[-1][:, 0, :]
+            concept_logits = self.concept_head(cls_token_state).view(x.size(0), self.num_concepts, 10)
+            
+        if self.num_concepts > 0 or self.num_equations > 1:
+            if output_attentions:
+                self.attention_weights = outputs.attentions
+                return logits, outputs.attentions, concept_logits
+            return logits, concept_logits
+        else:
+            if output_attentions:
+                self.attention_weights = outputs.attentions
+                return logits, outputs.attentions
+            return logits
     
     def visualize_attention(self, attention_weights, image_size=224, patch_size=16):
         """
@@ -342,10 +382,14 @@ class ProtoPNet(nn.Module):
         prototype_shape=(128, 1, 1),  # (channels, H, W)
         backbone="resnet50",
         pretrained=True,
+        num_equations=1,
+        num_concepts=0,
     ):
         super().__init__()
         
         self.n_classes = n_classes
+        self.num_equations = num_equations
+        self.num_concepts = num_concepts
         self.n_prototypes = n_classes * n_prototypes_per_class
         self.prototype_shape = prototype_shape
         
@@ -402,11 +446,17 @@ class ProtoPNet(nn.Module):
         # 3. Classification Layer
         # ═══════════════════════════════════════════════════
         # Each prototype votes for classes
-        # Shape: (n_classes, n_prototypes)
-        self.last_layer = nn.Linear(self.n_prototypes, n_classes, bias=False)
+        # Shape: (n_classes * num_equations, n_prototypes)
+        self.last_layer = nn.Linear(self.n_prototypes, n_classes * max(1, num_equations), bias=False)
         
         # Initialize: each prototype connected to its class
         self._initialize_last_layer()
+        
+        # Concept head
+        if self.num_concepts > 0:
+            self.concept_head = nn.Linear(2048, self.num_concepts * 10)
+        else:
+            self.concept_head = None
         
         # Epsilon for numerical stability
         self.epsilon = 1e-4
@@ -422,12 +472,13 @@ class ProtoPNet(nn.Module):
         with torch.no_grad():
             for j in range(self.n_prototypes):
                 class_idx = j // n_prototypes_per_class
-                
-                for c in range(self.n_classes):
-                    if c == class_idx:
-                        self.last_layer.weight[c, j] = 1.0
-                    else:
-                        self.last_layer.weight[c, j] = -0.5
+                for e in range(max(1, self.num_equations)):
+                    for c in range(self.n_classes):
+                        idx = e * self.n_classes + c
+                        if c == class_idx:
+                            self.last_layer.weight[idx, j] = 1.0
+                        else:
+                            self.last_layer.weight[idx, j] = -0.5
     
     def forward(self, x, return_distances=False):
         """
@@ -488,12 +539,23 @@ class ProtoPNet(nn.Module):
         # ═══════════════════════════════════════════════════
         # 4. Classification
         # ═══════════════════════════════════════════════════
-        logits = self.last_layer(similarities)  # (B, n_classes)
+        logits = self.last_layer(similarities)  # (B, n_classes * num_equations)
+        if self.num_equations > 1:
+            logits = logits.view(batch_size, self.num_equations, self.n_classes)
+            
+        concept_logits = None
+        if self.concept_head is not None:
+            pooled_features = torch.nn.functional.adaptive_avg_pool2d(self.features(x), (1, 1)).view(batch_size, -1)
+            concept_logits = self.concept_head(pooled_features).view(batch_size, self.num_concepts, 10)
         
-        if return_distances:
-            return logits, min_distances
-        
-        return logits
+        if self.num_concepts > 0 or self.num_equations > 1:
+            if return_distances:
+                return logits, min_distances, concept_logits
+            return logits, concept_logits
+        else:
+            if return_distances:
+                return logits, min_distances
+            return logits
     
     def push_prototypes(self, dataloader, device):
         """
@@ -652,10 +714,15 @@ def evaluate_model(model, dataloader, device):
         for batch in dataloader:
             images = batch["image"].to(device)
             labels = batch["label"].to(device)
-            logits = model(images)
-            preds = logits.argmax(dim=1)
+            outputs = model(images)
+            if isinstance(outputs, tuple):
+                logits = outputs[0]
+            else:
+                logits = outputs
+                
+            preds = logits.argmax(dim=-1)
             correct += (preds == labels).sum().item()
-            total += labels.size(0)
+            total += labels.numel()
     return correct / total if total > 0 else 0.0
 
 
@@ -676,12 +743,16 @@ def train_protopnet(model, train_loader, val_loader, config):
     # ═══════════════════════════════════════════════════
     print("Phase 1: Joint training...")
     
-    optimizer = torch.optim.Adam([
+    params_list = [
         {"params": model.features.parameters(), "lr": config["lr_features"]},
         {"params": model.projection.parameters(), "lr": config["lr_projection"]},
         {"params": model.prototypes, "lr": config["lr_prototypes"]},
         {"params": model.last_layer.parameters(), "lr": config["lr_last"]},
-    ])
+    ]
+    if hasattr(model, 'concept_head') and model.concept_head is not None:
+        params_list.append({"params": model.concept_head.parameters(), "lr": config["lr_last"]})
+        
+    optimizer = torch.optim.Adam(params_list)
     
     criterion = nn.CrossEntropyLoss()
     
@@ -694,16 +765,32 @@ def train_protopnet(model, train_loader, val_loader, config):
             
             optimizer.zero_grad()
             
-            logits, min_distances = model(images, return_distances=True)
+            outputs = model(images, return_distances=True)
+            if model.num_concepts > 0:
+                logits, min_distances, concept_logits = outputs
+            else:
+                logits, min_distances = outputs
             
             # Multi-component loss
-            loss_ce = criterion(logits, labels)
+            if logits.dim() > 2:
+                loss_ce = criterion(logits.view(-1, model.n_classes), labels.view(-1))
+            else:
+                loss_ce = criterion(logits, labels)
+            
+            if model.num_concepts > 0:
+                concepts = batch["concepts"].to(device)
+                loss_concept = criterion(concept_logits.view(-1, 10), concepts.view(-1))
+            else:
+                loss_concept = 0
             
             # Clustering loss: minimize distance to class prototypes
             n_prototypes_per_class = model.n_prototypes // model.n_classes
             cluster_loss = 0
             for c in range(model.n_classes):
-                class_mask = (labels == c)
+                if labels.dim() > 1:
+                    class_mask = (labels == c).any(dim=1)
+                else:
+                    class_mask = (labels == c)
                 if class_mask.any():
                     class_prototypes = range(c * n_prototypes_per_class, (c+1) * n_prototypes_per_class)
                     class_distances = min_distances[class_mask][:, class_prototypes]
@@ -712,10 +799,21 @@ def train_protopnet(model, train_loader, val_loader, config):
             cluster_loss /= model.n_classes
             
             # Separation loss: maximize distance to other prototypes
-            separation_loss = -torch.mean(min_distances)
+            separation_loss = 0
+            for c in range(model.n_classes):
+                if labels.dim() > 1:
+                    class_mask = ~(labels == c).any(dim=1)
+                else:
+                    class_mask = (labels != c)
+                if class_mask.any():
+                    class_prototypes = range(c * n_prototypes_per_class, (c+1) * n_prototypes_per_class)
+                    class_distances = min_distances[class_mask][:, class_prototypes]
+                    separation_loss += torch.mean(torch.min(class_distances, dim=1)[0])
+            
+            separation_loss = -separation_loss / max(1, model.n_classes - 1)
             
             # Total loss
-            loss = loss_ce + 0.8 * cluster_loss + 0.08 * separation_loss
+            loss = loss_ce + 0.8 * cluster_loss + 0.08 * separation_loss + loss_concept
             
             loss.backward()
             optimizer.step()
@@ -742,10 +840,11 @@ def train_protopnet(model, train_loader, val_loader, config):
         param.requires_grad = False
     model.prototypes.requires_grad = False
     
-    optimizer_last = torch.optim.Adam(
-        model.last_layer.parameters(),
-        lr=config["lr_last_finetune"]
-    )
+    params_list_last = [{"params": model.last_layer.parameters(), "lr": config["lr_last_finetune"]}]
+    if hasattr(model, 'concept_head') and model.concept_head is not None:
+        params_list_last.append({"params": model.concept_head.parameters(), "lr": config["lr_last_finetune"]})
+        
+    optimizer_last = torch.optim.Adam(params_list_last)
     
     for epoch in range(config["epochs_phase3"]):
         model.train()
@@ -756,8 +855,21 @@ def train_protopnet(model, train_loader, val_loader, config):
             
             optimizer_last.zero_grad()
             
-            logits = model(images)
-            loss = criterion(logits, labels)
+            outputs = model(images)
+            if isinstance(outputs, tuple):
+                logits = outputs[0]
+            else:
+                logits = outputs
+                
+            if logits.dim() > 2:
+                loss = criterion(logits.view(-1, model.n_classes), labels.view(-1))
+            else:
+                loss = criterion(logits, labels)
+            
+            if hasattr(model, 'num_concepts') and model.num_concepts > 0:
+                concept_logits = outputs[-1]
+                concepts = batch["concepts"].to(device)
+                loss += criterion(concept_logits.view(-1, 10), concepts.view(-1))
             
             loss.backward()
             optimizer_last.step()
@@ -839,9 +951,14 @@ class CLEVRQCNNClassifier(nn.Module):
         conv_channels=None,
         hidden_sizes=None,
         dropout=0.3,
+        num_equations=1,
+        num_concepts=0,
     ):
         super().__init__()
         self.input_channel = input_channel
+        self.n_classes = n_classes
+        self.num_equations = num_equations
+        self.num_concepts = num_concepts
 
         if conv_channels is None:
             conv_channels = [32, 64, 128]
@@ -876,7 +993,12 @@ class CLEVRQCNNClassifier(nn.Module):
         self.bn_q = nn.LayerNorm(n_qubits)
 
         # Multi-class output
-        self.final_fc = nn.Linear(n_qubits, n_classes)
+        self.final_fc = nn.Linear(n_qubits, n_classes * max(1, num_equations))
+        
+        if self.num_concepts > 0:
+            self.concept_head = nn.Linear(prev_dim, self.num_concepts * 10)
+        else:
+            self.concept_head = None
 
     def forward(self, x, return_features=False):
         target_device = x.device
@@ -905,10 +1027,20 @@ class CLEVRQCNNClassifier(nn.Module):
 
         # Multi-class logits
         logits = self.final_fc(x_combined)
-
-        if return_features:
-            return logits, x_combined
-
-        return logits
+        if self.num_equations > 1:
+            logits = logits.view(batch_size, self.num_equations, self.n_classes)
+            
+        concept_logits = None
+        if self.concept_head is not None:
+            concept_logits = self.concept_head(x).view(batch_size, self.num_concepts, 10)
+            
+        if self.num_concepts > 0 or self.num_equations > 1:
+            if return_features:
+                return logits, x_combined, concept_logits
+            return logits, concept_logits
+        else:
+            if return_features:
+                return logits, x_combined
+            return logits
 
 

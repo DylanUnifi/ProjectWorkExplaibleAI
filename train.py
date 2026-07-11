@@ -6,13 +6,13 @@ from tqdm import tqdm
 import wandb
 
 # Imports from merged files
-from dataset import get_clevr_hans_loaders, get_mnmath_loaders
+from dataset import get_cle4evr_loaders, get_clevr_hans_loaders, get_mnmath_loaders
 from model import ResNet50Classifier, ViTClassifier, ProtoPNet, train_protopnet, CLEVRQCNNClassifier
 
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", type=str, required=True, choices=["resnet50", "vit", "protopnet", "hybrid_qcnn"])
-    parser.add_argument("--dataset", type=str, required=True, choices=["clevr_hans3", "mnmath"])
+    parser.add_argument("--dataset", type=str, required=True, choices=["cle4evr", "mnmath"])
     parser.add_argument("--batch_size", type=int, default=512)
     parser.add_argument("--epochs", type=int, default=10)
     parser.add_argument("--lr", type=float, default=1e-4)
@@ -27,15 +27,30 @@ def train(model, loader, optimizer, criterion, device):
     for batch in tqdm(loader, desc="Training"):
         images, labels = batch["image"].to(device), batch["label"].to(device)
         optimizer.zero_grad()
-        logits = model(images)
-        loss = criterion(logits, labels)
+        outputs = model(images)
+        if isinstance(outputs, tuple):
+            logits = outputs[0]
+            concept_logits = outputs[-1] if len(outputs) >= 2 and outputs[-1] is not None else None
+        else:
+            logits = outputs
+            concept_logits = None
+            
+        if logits.dim() > 2:
+            loss = criterion(logits.view(-1, logits.size(-1)), labels.view(-1))
+        else:
+            loss = criterion(logits, labels)
+            
+        if concept_logits is not None and "concepts" in batch:
+            concepts = batch["concepts"].to(device)
+            loss += criterion(concept_logits.view(-1, concept_logits.size(-1)), concepts.view(-1))
+            
         loss.backward()
         optimizer.step()
         
         total_loss += loss.item()
-        preds = logits.argmax(dim=1)
+        preds = logits.argmax(dim=-1)
         correct += (preds == labels).sum().item()
-        total += len(labels)
+        total += labels.numel()
     return total_loss / len(loader), correct / total
 
 def evaluate(model, loader, criterion, device):
@@ -46,12 +61,27 @@ def evaluate(model, loader, criterion, device):
     with torch.no_grad():
         for batch in tqdm(loader, desc="Evaluating"):
             images, labels = batch["image"].to(device), batch["label"].to(device)
-            logits = model(images)
-            loss = criterion(logits, labels)
+            outputs = model(images)
+            if isinstance(outputs, tuple):
+                logits = outputs[0]
+                concept_logits = outputs[-1] if len(outputs) >= 2 and outputs[-1] is not None else None
+            else:
+                logits = outputs
+                concept_logits = None
+                
+            if logits.dim() > 2:
+                loss = criterion(logits.view(-1, logits.size(-1)), labels.view(-1))
+            else:
+                loss = criterion(logits, labels)
+                
+            if concept_logits is not None and "concepts" in batch:
+                concepts = batch["concepts"].to(device)
+                loss += criterion(concept_logits.view(-1, concept_logits.size(-1)), concepts.view(-1))
+                
             total_loss += loss.item()
-            preds = logits.argmax(dim=1)
+            preds = logits.argmax(dim=-1)
             correct += (preds == labels).sum().item()
-            total += len(labels)
+            total += labels.numel()
     return total_loss / len(loader), correct / total
 
 def main():
@@ -61,25 +91,28 @@ def main():
 
     # 1. Load Data
     print(f"Loading {args.dataset}...")
-    if args.dataset == "clevr_hans3":
-        train_loader, val_loader, test_loader = get_clevr_hans_loaders(root_dir="./CLEVR-Hans3", batch_size=args.batch_size)
-        n_classes = 3
+    num_equations = 1
+    num_concepts = 0
+    if args.dataset == "cle4evr":
+        train_loader, val_loader, test_loader = get_cle4evr_loaders(root_dir="./CLEVR-Hans3", batch_size=args.batch_size)
+        n_classes = 2
         in_channels = 3
     else:
-        train_loader, val_loader, test_loader = get_mnmath_loaders(batch_size=args.batch_size)
+        train_loader, val_loader, test_loader, num_equations, num_concepts = get_mnmath_loaders(batch_size=args.batch_size)
         n_classes = 19
         in_channels = 1
 
     # 2. Build Model
     print(f"Building {args.model}...")
+    kwargs = {"num_equations": num_equations, "num_concepts": num_concepts}
     if args.model == "resnet50":
-        model = ResNet50Classifier(n_classes=n_classes, input_channels=in_channels)
+        model = ResNet50Classifier(n_classes=n_classes, input_channels=in_channels, **kwargs)
     elif args.model == "vit":
-        model = ViTClassifier(n_classes=n_classes, pretrained=True, input_channels=in_channels)
+        model = ViTClassifier(n_classes=n_classes, pretrained=True, input_channels=in_channels, **kwargs)
     elif args.model == "protopnet":
-        model = ProtoPNet(n_classes=n_classes, input_channels=in_channels, n_prototypes_per_class=10)
+        model = ProtoPNet(n_classes=n_classes, input_channels=in_channels, n_prototypes_per_class=10, **kwargs)
     elif args.model == "hybrid_qcnn":
-        model = CLEVRQCNNClassifier(n_classes=n_classes, input_channel=in_channels, n_qubits=8, n_layers=1)
+        model = CLEVRQCNNClassifier(n_classes=n_classes, input_channel=in_channels, n_qubits=8, n_layers=1, **kwargs)
 
     model = model.to(args.device)
     
