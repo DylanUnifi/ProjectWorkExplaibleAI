@@ -81,8 +81,12 @@ def main():
     elif args.model == "hybrid_qcnn":
         model = CLEVRQCNNClassifier(n_classes=n_classes, input_channel=in_channels, n_qubits=8, n_layers=1)
 
-        
     model = model.to(args.device)
+    
+    # Use multiple GPUs if available (excluding ProtoPNet and QCNN which have custom routines)
+    if args.device == "cuda" and torch.cuda.device_count() > 1 and args.model in ["resnet50", "vit"]:
+        print(f"Using {torch.cuda.device_count()} GPUs with DataParallel!")
+        model = nn.DataParallel(model)
 
     # 3. Train
     if args.model == "protopnet":
@@ -125,14 +129,16 @@ def main():
             if val_acc > best_acc:
                 best_acc = val_acc
                 os.makedirs("checkpoints", exist_ok=True)
-                torch.save(model.state_dict(), f"checkpoints/{args.model}_{args.dataset}_best.pth")
+                state_dict = model.module.state_dict() if isinstance(model, nn.DataParallel) else model.state_dict()
+                torch.save(state_dict, f"checkpoints/{args.model}_{args.dataset}_best.pth")
                 print("Saved best model!")
 
     # 4. Test
     print("\nTesting...")
     # Load best model
     if os.path.exists(f"checkpoints/{args.model}_{args.dataset}_best.pth") and args.model != "protopnet":
-        model.load_state_dict(torch.load(f"checkpoints/{args.model}_{args.dataset}_best.pth"))
+        model_to_load = model.module if isinstance(model, nn.DataParallel) else model
+        model_to_load.load_state_dict(torch.load(f"checkpoints/{args.model}_{args.dataset}_best.pth"))
     
     test_loss, test_acc = evaluate(model, test_loader, nn.CrossEntropyLoss(), args.device)
     wandb.log({"test_loss": test_loss, "test_acc": test_acc})
