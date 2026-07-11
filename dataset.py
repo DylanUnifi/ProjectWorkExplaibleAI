@@ -641,7 +641,7 @@ def get_mnmath_loaders(
         
         train_loader = DataLoader(
             train_dataset, batch_size=batch_size, shuffle=True,
-            num_workers=num_workers, pin_memory=pin_memory, drop_last=True,
+            num_workers=num_workers, pin_memory=pin_memory, drop_last=(max_samples is None),
             persistent_workers=(num_workers > 0), prefetch_factor=2 if num_workers > 0 else None
         )
         val_loader = DataLoader(
