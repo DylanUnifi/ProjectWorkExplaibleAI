@@ -665,4 +665,63 @@ def get_mnmath_loaders(
         print(f"Warning: MNMath dataset not found or missing dependency: {e}. Returning empty loaders.")
         return None, None, None, 0, 0
 
+def get_cle4evr_loaders(
+    root_dir,
+    batch_size=64,
+    num_workers=16,
+    max_samples=None,
+):
+    """Get train/val/test loaders for CLE4EVR."""
+    from torchvision import transforms as T
+    from torch.utils.data import DataLoader, Subset
+    import numpy as np
 
+    eval_transform = T.Compose([
+        T.Resize((224, 224)),
+        T.ToTensor(),
+        T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    ])
+
+    train_transform = eval_transform
+
+    train_dataset = CLE4EVRDataset(root_dir, split="train", transform=train_transform)
+    val_dataset = CLE4EVRDataset(root_dir, split="val", transform=eval_transform)
+    test_dataset = CLE4EVRDataset(root_dir, split="test", transform=eval_transform)
+
+    if max_samples is not None:
+        train_dataset = Subset(train_dataset, np.arange(min(max_samples, len(train_dataset))))
+        val_dataset = Subset(val_dataset, np.arange(min(max_samples, len(val_dataset))))
+        test_dataset = Subset(test_dataset, np.arange(min(max_samples, len(test_dataset))))
+
+    # Using standard default collate since CLE4EVR output is just dict {"image", "label"}
+    train_loader = DataLoader(
+        train_dataset,
+        batch_size=batch_size,
+        shuffle=True,
+        num_workers=num_workers,
+        pin_memory=True,
+        persistent_workers=(num_workers > 0),
+        prefetch_factor=2 if num_workers > 0 else None,
+    )
+
+    val_loader = DataLoader(
+        val_dataset,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=num_workers,
+        pin_memory=True,
+        persistent_workers=(num_workers > 0),
+        prefetch_factor=2 if num_workers > 0 else None,
+    )
+
+    test_loader = DataLoader(
+        test_dataset,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=num_workers,
+        pin_memory=True,
+        persistent_workers=(num_workers > 0),
+        prefetch_factor=2 if num_workers > 0 else None,
+    )
+
+    return train_loader, val_loader, test_loader
