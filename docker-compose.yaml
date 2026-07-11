@@ -76,7 +76,7 @@ services:
         --dataset clevr_hans3
         --model protopnet
         --epochs 100
-        --batch_size 512
+        --batch_size 128
 
   train_hybrid_qcnn_clevr:
     <<: *gpu-config
@@ -142,7 +142,7 @@ services:
         --dataset mnmath
         --model protopnet
         --epochs 100
-        --batch_size 512
+        --batch_size 128
 
   train_hybrid_qcnn_mnmath:
     <<: *gpu-config
