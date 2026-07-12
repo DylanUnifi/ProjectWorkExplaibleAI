@@ -10,6 +10,7 @@ from model import ResNet50Classifier, ViTClassifier, ProtoPNet, HybridQCNNClassi
 from explainability.shap_explainer import SHAPExplainer
 from explainability.lime_explainer import LIMEExplainer
 from explainability.metrics import XAIMetrics
+from explainability.advanced_metrics import ComparativeXAIMetrics
 from explainability.visualization import plot_attribution_comparison
 
 def parse_args():
@@ -101,7 +102,20 @@ def main():
         shap_infidelity = metrics_calc.infidelity(images, shap_attrs, eval_labels, n_samples=10)
         lime_infidelity = metrics_calc.infidelity(images, lime_attrs, eval_labels, n_samples=10)
         
-        wandb.log({"shap_infidelity": shap_infidelity, "lime_infidelity": lime_infidelity})
+        # Calculate advanced metrics
+        rank_corr = ComparativeXAIMetrics.rank_agreement(shap_attrs, lime_attrs, method="spearman")
+        top_k_over = ComparativeXAIMetrics.top_k_overlap(shap_attrs, lime_attrs, k=100)
+        shap_complexity = ComparativeXAIMetrics.explanation_complexity(shap_attrs)
+        lime_complexity = ComparativeXAIMetrics.explanation_complexity(lime_attrs)
+        
+        wandb.log({
+            "shap_infidelity": shap_infidelity, 
+            "lime_infidelity": lime_infidelity,
+            "shap_vs_lime_rank_corr": rank_corr,
+            "shap_vs_lime_top_k_overlap": top_k_over,
+            "shap_complexity": shap_complexity,
+            "lime_complexity": lime_complexity
+        })
         
         import os
         os.makedirs("explanations", exist_ok=True)
