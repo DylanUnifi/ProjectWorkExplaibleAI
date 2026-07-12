@@ -71,7 +71,7 @@ class ResNet50Classifier(nn.Module):
             for i, block in enumerate(layer):
                 layer[i] = NonInPlaceBottleneckBlock(block)
         
-        # Freeze early layers si transfer learning
+        # Freeze early layers for transfer learning
         if freeze_backbone:
             for param in list(self.backbone.parameters())[:-15]:  # Freeze all but last few params
                 param.requires_grad = False
@@ -158,8 +158,8 @@ from transformers import ViTForImageClassification, ViTConfig
 
 class ViTClassifier(nn.Module):
     """
-    Vision Transformer pour CLEVR-Hans.
-    Utilise HuggingFace Transformers (optimisé, facile).
+    Vision Transformer for CLEVR-Hans.
+    Uses HuggingFace Transformers (optimized, easy).
     """
     
     def __init__(self, n_classes=3, pretrained=True, image_size=224, input_channels=3, num_equations=1, num_concepts=0):

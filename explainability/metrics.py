@@ -8,11 +8,11 @@ from scipy.stats import spearmanr
 
 class XAIMetrics:
     """
-    Métriques pour évaluer la qualité des explications.
+    Metrics to evaluate explanation quality.
     
-    Métriques implémentées:
+    Implemented metrics:
     - Faithfulness (Insertion/Deletion)
-    - Robustness (Stability sous perturbations)
+    - Robustness (Stability under perturbations)
     - Sensitivity (Attribution consistency)
     - Infidelity
     - Sparsity
@@ -322,21 +322,21 @@ class XAIMetrics:
 # Specific metrics for confounded datasets (CLEVR-Hans)
 class ConfounderDetectionMetrics:
     """
-    Métriques spécifiques pour détecter si les explications
-    capturent les confounders vs. les vraies règles de classe.
+    Metrics specific to detecting whether explanations
+    capture confounders vs. true class rules.
     """
     
     @staticmethod
     def confounder_attribution_ratio(attribution, confounder_mask):
         """
-        Ratio d'attribution sur les confounders vs. features utiles.
+        Ratio of attribution on confounders vs. useful features.
         
         Args:
             attribution: (B, C, H, W) attribution map
             confounder_mask: (B, C, H, W) binary mask (1 = confounder region)
         
         Returns:
-            ratio: Attribution sur confounders / Attribution totale
+            ratio: Attribution on confounders / Total attribution
         """
         attr_abs = attribution.abs()
         

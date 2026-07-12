@@ -11,8 +11,8 @@ from sklearn.metrics import average_precision_score
 
 class ComparativeXAIMetrics:
     """
-    Métriques pour comparer différentes méthodes XAI:
-    - Agreement entre méthodes
+    Metrics to compare different XAI methods:
+    - Agreement between methods
     - Stability across models
     - Confounder sensitivity
     """
