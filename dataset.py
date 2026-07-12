@@ -106,8 +106,8 @@ def extract_features_pca(dataloader, n_components, pca_model=None, desc="Extract
     """
     Extract flattened image features from a dataloader and apply PCA.
 
-    Uses IncrementalPCA when fitting so that the full n_samples×n_features matrix
-    (e.g. 9000×150528 ≈ 5 GB) is never materialised in RAM.  Two tqdm passes are
+    Uses IncrementalPCA when fitting so that the full n_samples_x_n_features matrix
+    (e.g. 9000x150528 ≈ 5 GB) is never materialised in RAM.  Two tqdm passes are
     shown: one for fitting, one for the final transform.
 
     Supports both:

@@ -505,9 +505,9 @@ class ProtoPNet(nn.Module):
         # ═══════════════════════════════════════════════════
         # For each spatial location, compute L2 distance to each prototype
         
-        # Reshape features: (B, C, H', W') → (B, C, H'×W')
+        # Reshape features: (B, C, H', W') → (B, C, H'xW')
         B, C, H, W = features.shape
-        features_flat = features.view(B, C, H * W)  # (B, C, H×W)
+        features_flat = features.view(B, C, H * W)  # (B, C, HxW)
         
         # Prototypes: (n_prototypes, C, 1, 1) → (n_prototypes, C)
         prototypes_flat = self.prototypes.view(self.n_prototypes, C)
@@ -515,15 +515,15 @@ class ProtoPNet(nn.Module):
         # Compute pairwise squared L2 distances
         # distances[b, p, loc] = ||features[b, :, loc] - prototypes[p, :]||^2
         
-        # Expand dimensions for broadcasting
-        features_expanded = features_flat.unsqueeze(1)  # (B, 1, C, H×W)
-        prototypes_expanded = prototypes_flat.unsqueeze(0).unsqueeze(-1)  # (1, n_prototypes, C, 1)
+        # Calculate squared distances
+        features_expanded = features_flat.unsqueeze(1)  # (B, 1, C, HxW)
+        prototypes_expanded = self.prototypes.unsqueeze(0).unsqueeze(3)  # (1, n_prototypes, C, 1)
         
         # Squared L2 distance
         distances_sq = torch.sum(
             (features_expanded - prototypes_expanded) ** 2,
             dim=2
-        )  # (B, n_prototypes, H×W)
+        )  # (B, n_prototypes, HxW)
         
         # Min distance per prototype (over all spatial locations)
         min_distances, _ = torch.min(distances_sq, dim=2)  # (B, n_prototypes)
@@ -581,7 +581,7 @@ class ProtoPNet(nn.Module):
                 features = self.projection(features)  # (B, C, H', W')
                 
                 B, C, H, W = features.shape
-                features_flat = features.view(B, C, H * W).permute(0, 2, 1)  # (B, H×W, C)
+                features_flat = features.view(B, C, H * W).permute(0, 2, 1)  # (B, HxW, C)
                 
                 # For each prototype
                 for p in range(self.n_prototypes):
@@ -591,7 +591,7 @@ class ProtoPNet(nn.Module):
                     distances = torch.sum(
                         (features_flat - prototype.unsqueeze(0).unsqueeze(0)) ** 2,
                         dim=2
-                    )  # (B, H×W)
+                    )  # (B, HxW)
                     
                     # Find minimum
                     min_dist, min_idx = torch.min(distances.view(-1), dim=0)
