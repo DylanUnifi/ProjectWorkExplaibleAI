@@ -6,7 +6,7 @@ from tqdm import tqdm
 import wandb
 
 from dataset import get_cle4evr_loaders, get_clevr_hans_loaders, get_mnmath_loaders
-from model import ResNet50Classifier, ViTClassifier, ProtoPNet, CLEVRQCNNClassifier
+from model import ResNet50Classifier, ViTClassifier, ProtoPNet, HybridQCNNClassifier
 from explainability.shap_explainer import SHAPExplainer
 from explainability.lime_explainer import LIMEExplainer
 from explainability.metrics import XAIMetrics
@@ -41,11 +41,11 @@ def load_model(args, n_classes, in_channels, num_equations=1, num_concepts=0):
     if args.model == "resnet50":
         model = ResNet50Classifier(n_classes=n_classes, input_channels=in_channels, **kwargs)
     elif args.model == "vit":
-        model = ViTClassifier(n_classes=n_classes, pretrained=False, input_channels=in_channels, **kwargs)
+        model = ViTClassifier(n_classes=n_classes, pretrained=True, input_channels=in_channels, **kwargs)
     elif args.model == "protopnet":
         model = ProtoPNet(n_classes=n_classes, input_channels=in_channels, n_prototypes_per_class=10, **kwargs)
     elif args.model == "hybrid_qcnn":
-        model = CLEVRQCNNClassifier(n_classes=n_classes, input_channel=in_channels, n_qubits=8, n_layers=1, **kwargs)
+        model = HybridQCNNClassifier(n_classes=n_classes, input_channel=in_channels, n_qubits=16, n_layers=2, backend="lightning.gpu", **kwargs)
 
         
     ckpt_path = f"checkpoints/{args.model}_{args.dataset}_best.pth"

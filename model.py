@@ -936,7 +936,7 @@ def _create_quantum_layer(n_qubits, n_layers=2, backend="lightning.gpu"):
     return layer
 
 
-class CLEVRQCNNClassifier(nn.Module):
+class HybridQCNNClassifier(nn.Module):
     """
     QCNN for CLEVR-Hans (3 or 7 classes).
     """

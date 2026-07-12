@@ -7,7 +7,7 @@ import wandb
 
 # Imports from merged files
 from dataset import get_cle4evr_loaders, get_clevr_hans_loaders, get_mnmath_loaders
-from model import ResNet50Classifier, ViTClassifier, ProtoPNet, train_protopnet, CLEVRQCNNClassifier
+from model import ResNet50Classifier, ViTClassifier, ProtoPNet, train_protopnet, HybridQCNNClassifier
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -112,7 +112,7 @@ def main():
     elif args.model == "protopnet":
         model = ProtoPNet(n_classes=n_classes, input_channels=in_channels, n_prototypes_per_class=10, **kwargs)
     elif args.model == "hybrid_qcnn":
-        model = CLEVRQCNNClassifier(n_classes=n_classes, input_channel=in_channels, n_qubits=8, n_layers=1, **kwargs)
+        model = HybridQCNNClassifier(n_classes=n_classes, input_channel=in_channels, n_qubits=16, n_layers=2, backend="lightning.gpu", **kwargs)
 
     model = model.to(args.device)
     
