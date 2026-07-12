@@ -30,6 +30,12 @@ class ComparativeXAIMetrics:
         Returns:
             correlation: Rank correlation coefficient
         """
+        # Ensure single channel (aggregate over C if C > 1)
+        if attr1.dim() == 4 and attr1.shape[1] > 1:
+            attr1 = attr1.sum(dim=1, keepdim=True)
+        if attr2.dim() == 4 and attr2.shape[1] > 1:
+            attr2 = attr2.sum(dim=1, keepdim=True)
+            
         # Flatten
         attr1_flat = attr1.abs().view(attr1.shape[0], -1).detach().cpu().numpy()
         attr2_flat = attr2.abs().view(attr2.shape[0], -1).detach().cpu().numpy()
@@ -38,12 +44,18 @@ class ComparativeXAIMetrics:
         
         for i in range(len(attr1_flat)):
             if method == "spearman":
-                corr, _ = spearmanr(attr1_flat[i], attr2_flat[i])
+                with np.errstate(invalid='ignore'):
+                    corr, _ = spearmanr(attr1_flat[i], attr2_flat[i])
             elif method == "kendall":
-                corr, _ = kendalltau(attr1_flat[i], attr2_flat[i])
+                with np.errstate(invalid='ignore'):
+                    corr, _ = kendalltau(attr1_flat[i], attr2_flat[i])
             else:
                 raise ValueError(f"Unknown method: {method}")
             
+            # If array is constant, spearmanr returns nan
+            if np.isnan(corr):
+                corr = 0.0
+                
             correlations.append(corr)
         
         return np.mean(correlations)
@@ -56,6 +68,12 @@ class ComparativeXAIMetrics:
         Returns:
             overlap: Fraction of top-k pixels that overlap
         """
+        # Ensure single channel (aggregate over C if C > 1)
+        if attr1.dim() == 4 and attr1.shape[1] > 1:
+            attr1 = attr1.sum(dim=1, keepdim=True)
+        if attr2.dim() == 4 and attr2.shape[1] > 1:
+            attr2 = attr2.sum(dim=1, keepdim=True)
+            
         attr1_flat = attr1.abs().view(attr1.shape[0], -1)
         attr2_flat = attr2.abs().view(attr2.shape[0], -1)
         
