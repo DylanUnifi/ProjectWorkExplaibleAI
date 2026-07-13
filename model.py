@@ -517,7 +517,7 @@ class ProtoPNet(nn.Module):
         
         # Calculate squared distances
         features_expanded = features_flat.unsqueeze(1)  # (B, 1, C, HxW)
-        prototypes_expanded = self.prototypes.unsqueeze(0).unsqueeze(3)  # (1, n_prototypes, C, 1)
+        prototypes_expanded = prototypes_flat.unsqueeze(0).unsqueeze(3)  # (1, n_prototypes, C, 1)
         
         # Squared L2 distance
         distances_sq = torch.sum(

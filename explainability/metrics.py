@@ -30,9 +30,9 @@ class XAIMetrics:
         - x: float32 tensor on self.device, shape (B, C, H, W) or (B, C, T, H, W)
         - attribution: float32 tensor on self.device, shape matching x
           Handles:
-            B×H×W -> B×1×H×W
-            B×1×H×W with x having C>1 channels -> expand to B×C×H×W
-            B×C×H×W×K (SHAP trailing class dim) -> select target class
+            BxHxW -> Bx1xHxW
+            Bx1xHxW with x having C>1 channels -> expand to BxCxHxW
+            BxCxHxWxK (SHAP trailing class dim) -> select target class
         - target: 1-D LongTensor of shape (B,) on self.device
         """
         # Canonicalize x
