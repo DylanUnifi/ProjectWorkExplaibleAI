@@ -28,6 +28,7 @@ class LIMEExplainer:
         
         # Convert to tensor and normalize back using stored mean/std
         x = torch.from_numpy(images).float().permute(0, 3, 1, 2) / 255.0
+        x = x.to(self.device)
         self.mean = self.mean.to(self.device)
         self.std = self.std.to(self.device)
         x = (x - self.mean) / self.std
