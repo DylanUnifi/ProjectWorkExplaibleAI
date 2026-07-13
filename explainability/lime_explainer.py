@@ -11,8 +11,10 @@ class LIMEExplainer:
     LIME (Local Interpretable Model-agnostic Explanations) for images.
     """
     
-    def __init__(self, model, n_classes):
+    def __init__(self, model, n_classes, mean=[0.5], std=[0.5]):
         self.model = model
+        self.mean = torch.tensor(mean).view(-1, 1, 1)
+        self.std = torch.tensor(std).view(-1, 1, 1)
         self.model.eval()
         self.device = next(model.parameters()).device
         self.n_classes = n_classes
@@ -24,8 +26,11 @@ class LIMEExplainer:
         """Prediction function for LIME."""
         # images: (B, H, W, C) numpy array [0, 255]
         
-        # Convert to tensor
+        # Convert to tensor and normalize back using stored mean/std
         x = torch.from_numpy(images).float().permute(0, 3, 1, 2) / 255.0
+        self.mean = self.mean.to(self.device)
+        self.std = self.std.to(self.device)
+        x = (x - self.mean) / self.std
         x = x.to(self.device)
         
         # Predict
@@ -55,8 +60,9 @@ class LIMEExplainer:
         for i in range(images.size(0)):
             image = images[i]
             
-            # Convert to numpy (H, W, C) [0, 255]
-            img_np = (image.permute(1, 2, 0).detach().cpu().numpy() * 255).astype(np.uint8)
+            # Unnormalize using stored mean/std
+            unnorm_image = (image.cpu() * self.std.cpu() + self.mean.cpu())
+            img_np = (unnorm_image.permute(1, 2, 0).detach().numpy() * 255).clip(0, 255).astype(np.uint8)
             
             # Custom segmentation for MNMath (32x128 grid)
             if img_np.shape[0] == 32 and img_np.shape[1] == 128:
@@ -93,7 +99,8 @@ class LIMEExplainer:
     
     def visualize(self, image, explanation, save_path=None):
         """Visualize LIME explanation."""
-        img_np = (image.permute(1, 2, 0).detach().cpu().numpy() * 255).astype(np.uint8)
+        unnorm_image = (image.cpu() * self.std.cpu() + self.mean.cpu())
+        img_np = (unnorm_image.permute(1, 2, 0).detach().numpy() * 255).clip(0, 255).astype(np.uint8)
         
         temp, mask = explanation.get_image_and_mask(
             explanation.top_labels[0],

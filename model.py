@@ -756,6 +756,12 @@ def train_protopnet(model, train_loader, val_loader, config):
     
     criterion = nn.CrossEntropyLoss()
     
+    best_val_acc_p1 = 0
+    patience_p1 = 10
+    epochs_no_improve_p1 = 0
+    import copy
+    best_model_state_p1 = None
+
     for epoch in range(config["epochs_phase1"]):
         model.train()
         
@@ -821,6 +827,21 @@ def train_protopnet(model, train_loader, val_loader, config):
         # Validation
         val_acc = evaluate_model(model, val_loader, device)
         print(f"Phase 1 Epoch {epoch+1}: Val Acc = {val_acc:.2%}")
+        
+        if val_acc > best_val_acc_p1:
+            best_val_acc_p1 = val_acc
+            epochs_no_improve_p1 = 0
+            best_model_state_p1 = copy.deepcopy(model.state_dict())
+        else:
+            epochs_no_improve_p1 += 1
+            print(f"Phase 1 Early stopping counter: {epochs_no_improve_p1}/{patience_p1}")
+            if epochs_no_improve_p1 >= patience_p1:
+                print(f"Phase 1 Early stopping triggered after {epoch+1} epochs!")
+                break
+                
+    if best_model_state_p1 is not None:
+        model.load_state_dict(best_model_state_p1)
+        print("Restored best model from Phase 1.")
     
     # ═══════════════════════════════════════════════════
     # PHASE 2: Prototype Pushing
@@ -846,6 +867,11 @@ def train_protopnet(model, train_loader, val_loader, config):
         
     optimizer_last = torch.optim.Adam(params_list_last)
     
+    best_val_acc_p3 = 0
+    patience_p3 = 10
+    epochs_no_improve_p3 = 0
+    best_model_state_p3 = None
+
     for epoch in range(config["epochs_phase3"]):
         model.train()
         
@@ -876,6 +902,21 @@ def train_protopnet(model, train_loader, val_loader, config):
         
         val_acc = evaluate_model(model, val_loader, device)
         print(f"Phase 3 Epoch {epoch+1}: Val Acc = {val_acc:.2%}")
+        
+        if val_acc > best_val_acc_p3:
+            best_val_acc_p3 = val_acc
+            epochs_no_improve_p3 = 0
+            best_model_state_p3 = copy.deepcopy(model.state_dict())
+        else:
+            epochs_no_improve_p3 += 1
+            print(f"Phase 3 Early stopping counter: {epochs_no_improve_p3}/{patience_p3}")
+            if epochs_no_improve_p3 >= patience_p3:
+                print(f"Phase 3 Early stopping triggered after {epoch+1} epochs!")
+                break
+                
+    if best_model_state_p3 is not None:
+        model.load_state_dict(best_model_state_p3)
+        print("Restored best model from Phase 3.")
     
     return model
 

@@ -74,10 +74,14 @@ def main():
         train_loader, _, test_loader = get_cle4evr_loaders(root_dir="./CLEVR-Hans3", batch_size=args.batch_size, max_samples=args.max_samples)
         n_classes = 2
         in_channels = 3
+        mean = [0.485, 0.456, 0.406]
+        std = [0.229, 0.224, 0.225]
     else:
         train_loader, _, test_loader, num_equations, num_concepts = get_mnmath_loaders(batch_size=args.batch_size, max_samples=args.max_samples)
         n_classes = 19
         in_channels = 1
+        mean = [0.5]
+        std = [0.5]
 
     model = load_model(args, n_classes, in_channels, num_equations, num_concepts)
 
@@ -88,7 +92,7 @@ def main():
     print("Running SHAP and LIME Explainers...")
     wrapped_model = ModelWrapper(model)
     shap_explainer = SHAPExplainer(wrapped_model, train_loader, method="gradient")
-    lime_explainer = LIMEExplainer(wrapped_model, n_classes=n_classes)
+    lime_explainer = LIMEExplainer(wrapped_model, n_classes=n_classes, mean=mean, std=std)
     metrics_calc = XAIMetrics(wrapped_model, args.device)
 
     for i, batch in enumerate(tqdm(test_loader, desc="Generating Explanations")):

@@ -152,6 +152,8 @@ def main():
         criterion = nn.CrossEntropyLoss()
         
         best_acc = 0
+        patience = 10
+        epochs_without_improvement = 0
         for epoch in range(args.epochs):
             print(f"\nEpoch {epoch+1}/{args.epochs}")
             train_loss, train_acc = train(model, train_loader, optimizer, criterion, args.device)
@@ -163,10 +165,17 @@ def main():
             
             if val_acc > best_acc:
                 best_acc = val_acc
+                epochs_without_improvement = 0
                 os.makedirs("checkpoints", exist_ok=True)
                 state_dict = model.module.state_dict() if isinstance(model, nn.DataParallel) else model.state_dict()
                 torch.save(state_dict, f"checkpoints/{args.model}_{args.dataset}_best.pth")
                 print("Saved best model!")
+            else:
+                epochs_without_improvement += 1
+                print(f"Early stopping counter: {epochs_without_improvement}/{patience}")
+                if epochs_without_improvement >= patience:
+                    print(f"Early stopping triggered after {epoch+1} epochs!")
+                    break
 
     # 4. Test
     print("\nTesting...")
