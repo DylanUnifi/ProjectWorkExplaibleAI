@@ -107,7 +107,7 @@ services:
       python explain.py
         --dataset cle4evr
         --model resnet50
-        --batch_size 512
+        --batch_size 16
 
   explain_vit_clevr:
     <<: *gpu-config
@@ -115,7 +115,7 @@ services:
       python explain.py
         --dataset cle4evr
         --model vit
-        --batch_size 512
+        --batch_size 16
 
   explain_hybrid_qcnn_clevr:
     <<: *gpu-config
@@ -186,7 +186,7 @@ services:
       python explain.py
         --dataset mnmath
         --model resnet50
-        --batch_size 512
+        --batch_size 16
 
   explain_vit_mnmath:
     <<: *gpu-config
@@ -194,7 +194,7 @@ services:
       python explain.py
         --dataset mnmath
         --model vit
-        --batch_size 512
+        --batch_size 16
 
   explain_hybrid_qcnn_mnmath:
     <<: *gpu-config
