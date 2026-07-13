@@ -87,6 +87,15 @@ services:
         --epochs 100
         --batch_size 512
 
+  train_hybrid_qvit_clevr:
+    <<: *gpu-config
+    command: >
+      python train.py
+        --dataset cle4evr
+        --model hybrid_qvit
+        --epochs 100
+        --batch_size 512
+
 
   # ════════════════════════════════════════════════════════════════════
   # EXPLAINABILITY (XAI)
@@ -114,6 +123,14 @@ services:
       python explain.py
         --dataset cle4evr
         --model hybrid_qcnn
+        --batch_size 512
+
+  explain_hybrid_qvit_clevr:
+    <<: *gpu-config
+    command: >
+      python explain.py
+        --dataset cle4evr
+        --model hybrid_qvit
         --batch_size 512
 
   # MNMath Training Services
@@ -153,6 +170,15 @@ services:
         --epochs 100
         --batch_size 512
 
+  train_hybrid_qvit_mnmath:
+    <<: *gpu-config
+    command: >
+      python train.py
+        --dataset mnmath
+        --model hybrid_qvit
+        --epochs 100
+        --batch_size 512
+
   # MNMath Explain Services
   explain_resnet50_mnmath:
     <<: *gpu-config
@@ -176,6 +202,14 @@ services:
       python explain.py
         --dataset mnmath
         --model hybrid_qcnn
+        --batch_size 512
+
+  explain_hybrid_qvit_mnmath:
+    <<: *gpu-config
+    command: >
+      python explain.py
+        --dataset mnmath
+        --model hybrid_qvit
         --batch_size 512
 
   # ════════════════════════════════════════════════════════════════════
