@@ -14,7 +14,7 @@ def parse_args():
     parser.add_argument("--model", type=str, required=True, choices=["resnet50", "vit", "protopnet", "hybrid_qcnn", "hybrid_qvit"])
     parser.add_argument("--dataset", type=str, required=True, choices=["cle4evr", "mnmath"])
     parser.add_argument("--batch_size", type=int, default=512)
-    parser.add_argument("--epochs", type=int, default=10)
+    parser.add_argument("--epochs", type=int, default=10, help="number of epochs to train")
     parser.add_argument("--lr", type=float, default=1e-4)
     parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu")
     return parser.parse_args()

@@ -57,7 +57,7 @@ services:
       python train.py
         --dataset cle4evr
         --model resnet50
-        --epochs 100
+        --epochs 10
         --batch_size 512
 
   train_vit_clevr:
@@ -66,7 +66,7 @@ services:
       python train.py
         --dataset cle4evr
         --model vit
-        --epochs 100
+        --epochs 10
         --batch_size 512
 
   train_protopnet_clevr:
@@ -75,7 +75,7 @@ services:
       python train.py
         --dataset cle4evr
         --model protopnet
-        --epochs 100
+        --epochs 10
         --batch_size 128
 
   train_hybrid_qcnn_clevr:
@@ -84,7 +84,7 @@ services:
       python train.py
         --dataset cle4evr
         --model hybrid_qcnn
-        --epochs 100
+        --epochs 10
         --batch_size 512
 
   train_hybrid_qvit_clevr:
@@ -93,7 +93,7 @@ services:
       python train.py
         --dataset cle4evr
         --model hybrid_qvit
-        --epochs 100
+        --epochs 10
         --batch_size 512
 
 
@@ -140,7 +140,7 @@ services:
       python train.py
         --dataset mnmath
         --model resnet50
-        --epochs 100
+        --epochs 10
         --batch_size 512
 
   train_vit_mnmath:
@@ -149,7 +149,7 @@ services:
       python train.py
         --dataset mnmath
         --model vit
-        --epochs 100
+        --epochs 10
         --batch_size 512
 
   train_protopnet_mnmath:
@@ -158,7 +158,7 @@ services:
       python train.py
         --dataset mnmath
         --model protopnet
-        --epochs 100
+        --epochs 10
         --batch_size 128
 
   train_hybrid_qcnn_mnmath:
@@ -167,7 +167,7 @@ services:
       python train.py
         --dataset mnmath
         --model hybrid_qcnn
-        --epochs 100
+        --epochs 10
         --batch_size 512
 
   train_hybrid_qvit_mnmath:
@@ -176,7 +176,7 @@ services:
       python train.py
         --dataset mnmath
         --model hybrid_qvit
-        --epochs 100
+        --epochs 10
         --batch_size 512
 
   # MNMath Explain Services
