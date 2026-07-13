@@ -1050,16 +1050,17 @@ class HybridQViT(nn.Module):
     Uses classical self-attention and a Quantum Circuit as the Feed-Forward/MLP block.
     Dynamically resizes input to 64x64 to limit the number of patches (64 patches of 8x8).
     """
-    def __init__(self, n_classes=3, input_channel=3, n_qubits=8, img_size=64, patch_size=8, backend="lightning.qubit", num_equations=1, num_concepts=0, **kwargs):
+    def __init__(self, n_classes=3, input_channel=3, n_qubits=4, img_size=64, patch_size=8, embed_dim=64, backend="default.qubit", num_equations=1, num_concepts=0, **kwargs):
         super().__init__()
         self.n_classes = n_classes
         self.num_equations = num_equations
         self.num_concepts = num_concepts
+        self.n_qubits = n_qubits
         
         # Calculate number of patches
         assert img_size % patch_size == 0
         self.num_patches = (img_size // patch_size) ** 2
-        self.embed_dim = n_qubits  # Match embedding dimension to number of qubits
+        self.embed_dim = embed_dim  # Standard ViT embedding dimension
         
         # Patch Embedding
         self.patch_embed = nn.Conv2d(input_channel, self.embed_dim, kernel_size=patch_size, stride=patch_size)
@@ -1068,7 +1069,7 @@ class HybridQViT(nn.Module):
         
         # Transformer Block (Classical Self-Attention + Classical MLP)
         self.norm1 = nn.LayerNorm(self.embed_dim)
-        self.attn = nn.MultiheadAttention(embed_dim=self.embed_dim, num_heads=1, batch_first=True)
+        self.attn = nn.MultiheadAttention(embed_dim=self.embed_dim, num_heads=4, batch_first=True)
         self.norm2 = nn.LayerNorm(self.embed_dim)
         self.mlp = nn.Sequential(
             nn.Linear(self.embed_dim, self.embed_dim * 4),
@@ -1076,14 +1077,17 @@ class HybridQViT(nn.Module):
             nn.Linear(self.embed_dim * 4, self.embed_dim)
         )
         
+        # Projection to Quantum space
+        self.quantum_proj = nn.Linear(self.embed_dim, self.n_qubits)
+        
         # Quantum Layer (applied only to CLS token at the end)
-        self.quantum_layer = _create_quantum_layer(n_qubits, n_layers=1, backend=backend)
+        self.quantum_layer = _create_quantum_layer(self.n_qubits, n_layers=1, backend=backend)
         
         # Classification Head
-        self.head = nn.Linear(n_qubits, n_classes * max(1, num_equations))
+        self.head = nn.Linear(self.n_qubits, n_classes * max(1, num_equations))
         
         if self.num_concepts > 0:
-            self.concept_head = nn.Linear(n_qubits, self.num_concepts * 10)
+            self.concept_head = nn.Linear(self.n_qubits, self.num_concepts * 10)
         else:
             self.concept_head = None
 
@@ -1114,12 +1118,15 @@ class HybridQViT(nn.Module):
         # Extract CLS token
         cls_feat = x[:, 0]
         
+        # Project CLS token to quantum dimension
+        cls_q = self.quantum_proj(cls_feat)
+        
         # Project CLS token to quantum inputs [-pi, pi]
-        q_input = torch.tanh(cls_feat) * np.pi
+        q_input = torch.tanh(cls_q) * np.pi
         
         # Quantum forward (ONLY B evaluations instead of B*seq_len)
         q_out = self.quantum_layer(q_input)
-        q_out = q_out.reshape(B, self.embed_dim).to(x.device)
+        q_out = q_out.reshape(B, self.n_qubits).to(x.device)
         
         # Classification
         logits = self.head(q_out)
