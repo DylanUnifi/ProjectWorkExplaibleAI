@@ -1066,19 +1066,24 @@ class HybridQViT(nn.Module):
         self.cls_token = nn.Parameter(torch.randn(1, 1, self.embed_dim))
         self.pos_embed = nn.Parameter(torch.randn(1, self.num_patches + 1, self.embed_dim))
         
-        # Transformer Block (Classical Self-Attention + Quantum MLP)
+        # Transformer Block (Classical Self-Attention + Classical MLP)
         self.norm1 = nn.LayerNorm(self.embed_dim)
         self.attn = nn.MultiheadAttention(embed_dim=self.embed_dim, num_heads=1, batch_first=True)
         self.norm2 = nn.LayerNorm(self.embed_dim)
+        self.mlp = nn.Sequential(
+            nn.Linear(self.embed_dim, self.embed_dim * 4),
+            nn.GELU(),
+            nn.Linear(self.embed_dim * 4, self.embed_dim)
+        )
         
-        # Quantum Layer as MLP
+        # Quantum Layer (applied only to CLS token at the end)
         self.quantum_layer = _create_quantum_layer(n_qubits, n_layers=1, backend=backend)
         
         # Classification Head
-        self.head = nn.Linear(self.embed_dim, n_classes * max(1, num_equations))
+        self.head = nn.Linear(n_qubits, n_classes * max(1, num_equations))
         
         if self.num_concepts > 0:
-            self.concept_head = nn.Linear(self.embed_dim, self.num_concepts * 10)
+            self.concept_head = nn.Linear(n_qubits, self.num_concepts * 10)
         else:
             self.concept_head = None
 
@@ -1102,35 +1107,27 @@ class HybridQViT(nn.Module):
         attn_out, _ = self.attn(x_norm1, x_norm1, x_norm1)
         x = x + attn_out
         
-        # Quantum MLP (applied to each token)
+        # Classical MLP (applied to each token)
         x_norm2 = self.norm2(x)
-        # Reshape for quantum layer: (B * seq_len, embed_dim)
-        seq_len = x_norm2.shape[1]
-        x_flat = x_norm2.reshape(-1, self.embed_dim)
-        
-        # Project to quantum inputs [-pi, pi]
-        x_q_input = torch.tanh(x_flat) * np.pi
-        
-        # Quantum forward
-        x_q_out = self.quantum_layer(x_q_input)
-        
-        # Back to shape
-        x_q_out = x_q_out.reshape(B, seq_len, self.embed_dim).to(x.device)
-        
-        # Residual
-        x = x + x_q_out
+        x = x + self.mlp(x_norm2)
         
         # Extract CLS token
         cls_feat = x[:, 0]
         
+        # Project CLS token to quantum inputs [-pi, pi]
+        q_input = torch.tanh(cls_feat) * np.pi
+        
+        # Quantum forward (ONLY B evaluations instead of B*seq_len)
+        q_out = self.quantum_layer(q_input)
+        
         # Classification
-        logits = self.head(cls_feat)
+        logits = self.head(q_out)
         if self.num_equations > 1:
             logits = logits.view(B, self.num_equations, self.n_classes)
             
         concept_logits = None
         if self.concept_head is not None:
-            concept_logits = self.concept_head(cls_feat).view(B, self.num_concepts, 10)
+            concept_logits = self.concept_head(q_out).view(B, self.num_concepts, 10)
             
         if self.num_concepts > 0 or self.num_equations > 1:
             if return_features:
