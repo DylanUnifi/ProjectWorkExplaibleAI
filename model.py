@@ -962,6 +962,12 @@ def _create_true_qcnn_layer(n_qubits=8, backend="default.qubit"):
 
     weight_shapes = {"weights": (5, 15)}
     layer = qml.qnn.TorchLayer(qnode, weight_shapes)
+    
+    # Initialize the quantum weights properly over [-pi, pi]
+    for name, param in layer.named_parameters():
+        if "weights" in name:
+            nn.init.uniform_(param, -np.pi, np.pi)
+
     return layer
 
 
