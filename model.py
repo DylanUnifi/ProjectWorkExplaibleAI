@@ -917,7 +917,7 @@ def _create_quantum_layer(n_qubits, n_layers=2, backend="lightning.gpu"):
     """Create PennyLane quantum layer."""
     dev = qml.device(backend, wires=n_qubits)
 
-    @qml.qnode(dev, interface="torch")
+    @qml.qnode(dev, interface="torch", diff_method="adjoint")
     def qnode(inputs, weights):
         # Data Re-uploading: interleaving data embedding with parameterized layers
         for i in range(n_layers):
