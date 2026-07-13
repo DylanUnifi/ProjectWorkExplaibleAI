@@ -67,7 +67,7 @@ services:
         --dataset cle4evr
         --model vit
         --epochs 100
-        --batch_size 64
+        --batch_size 512
 
   train_protopnet_clevr:
     <<: *gpu-config
@@ -94,7 +94,7 @@ services:
         --dataset cle4evr
         --model hybrid_qvit
         --epochs 10
-        --batch_size 64
+        --batch_size 512
 
 
   # ════════════════════════════════════════════════════════════════════
@@ -107,7 +107,7 @@ services:
       python explain.py
         --dataset cle4evr
         --model resnet50
-        --batch_size 16
+        --batch_size 512
 
   explain_vit_clevr:
     <<: *gpu-config
@@ -115,7 +115,7 @@ services:
       python explain.py
         --dataset cle4evr
         --model vit
-        --batch_size 16
+        --batch_size 512
 
   explain_hybrid_qcnn_clevr:
     <<: *gpu-config
@@ -150,7 +150,7 @@ services:
         --dataset mnmath
         --model vit
         --epochs 100
-        --batch_size 64
+        --batch_size 512
 
   train_protopnet_mnmath:
     <<: *gpu-config
@@ -177,7 +177,7 @@ services:
         --dataset mnmath
         --model hybrid_qvit
         --epochs 10
-        --batch_size 64
+        --batch_size 512
 
   # MNMath Explain Services
   explain_resnet50_mnmath:
@@ -186,7 +186,7 @@ services:
       python explain.py
         --dataset mnmath
         --model resnet50
-        --batch_size 16
+        --batch_size 512
 
   explain_vit_mnmath:
     <<: *gpu-config
@@ -194,7 +194,7 @@ services:
       python explain.py
         --dataset mnmath
         --model vit
-        --batch_size 16
+        --batch_size 512
 
   explain_hybrid_qcnn_mnmath:
     <<: *gpu-config
