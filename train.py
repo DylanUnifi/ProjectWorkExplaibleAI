@@ -11,7 +11,7 @@ from model import ResNet50Classifier, ViTClassifier, ProtoPNet, train_protopnet,
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", type=str, required=True, choices=["resnet50", "vit", "protopnet", "hybrid_qcnn"])
+    parser.add_argument("--model", type=str, required=True, choices=["resnet50", "vit", "protopnet", "hybrid_qcnn", "hybrid_qvit"])
     parser.add_argument("--dataset", type=str, required=True, choices=["cle4evr", "mnmath"])
     parser.add_argument("--batch_size", type=int, default=512)
     parser.add_argument("--epochs", type=int, default=10)

@@ -15,7 +15,7 @@ from explainability.visualization import plot_attribution_comparison
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", type=str, required=True, choices=["resnet50", "vit", "protopnet", "hybrid_qcnn"])
+    parser.add_argument("--model", type=str, required=True, choices=["resnet50", "vit", "protopnet", "hybrid_qcnn", "hybrid_qvit"])
     parser.add_argument("--dataset", type=str, required=True, choices=["cle4evr", "mnmath"])
     parser.add_argument("--batch_size", type=int, default=16)
     parser.add_argument("--max_samples", type=int, default=32)
