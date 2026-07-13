@@ -46,8 +46,8 @@ def load_model(args, n_classes, in_channels, num_equations=1, num_concepts=0):
     elif args.model == "protopnet":
         model = ProtoPNet(n_classes=n_classes, input_channels=in_channels, n_prototypes_per_class=10, **kwargs)
     elif args.model == "hybrid_qcnn":
-        # Utilisation de 4 qubits et lightning.qubit suite aux résultats
-        model = HybridQCNNClassifier(n_classes=n_classes, input_channel=in_channels, n_qubits=4, n_layers=1, backend="lightning.qubit", **kwargs)
+        # Utilisation de 8 qubits et lightning.qubit suite aux résultats
+        model = HybridQCNNClassifier(n_classes=n_classes, input_channel=in_channels, n_qubits=8, n_layers=1, backend="lightning.qubit", **kwargs)
 
         
     ckpt_path = f"checkpoints/{args.model}_{args.dataset}_best.pth"

@@ -112,7 +112,7 @@ def main():
     elif args.model == "protopnet":
         model = ProtoPNet(n_classes=n_classes, input_channels=in_channels, n_prototypes_per_class=10, **kwargs)
     elif args.model == "hybrid_qcnn":
-        model = HybridQCNNClassifier(n_classes=n_classes, input_channel=in_channels, n_qubits=4, n_layers=1, backend="lightning.qubit", **kwargs)
+        model = HybridQCNNClassifier(n_classes=n_classes, input_channel=in_channels, n_qubits=8, n_layers=1, backend="lightning.qubit", **kwargs)
 
     model = model.to(args.device)
     
