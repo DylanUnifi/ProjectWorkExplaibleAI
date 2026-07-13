@@ -18,7 +18,7 @@ def parse_args():
     parser.add_argument("--model", type=str, required=True, choices=["resnet50", "vit", "protopnet", "hybrid_qcnn", "hybrid_qvit"])
     parser.add_argument("--dataset", type=str, required=True, choices=["cle4evr", "mnmath"])
     parser.add_argument("--batch_size", type=int, default=16)
-    parser.add_argument("--max_samples", type=int, default=32)
+    parser.add_argument("--max_samples", type=int, default=128, help="Number of samples to explain")
     parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu")
     return parser.parse_args()
 
@@ -94,6 +94,17 @@ def main():
     shap_explainer = SHAPExplainer(wrapped_model, train_loader, method="gradient")
     lime_explainer = LIMEExplainer(wrapped_model, n_classes=n_classes, mean=mean, std=std)
     metrics_calc = XAIMetrics(wrapped_model, args.device)
+    
+    # Initialize accumulators
+    avg_metrics = {
+        "shap_infidelity": 0.0,
+        "lime_infidelity": 0.0,
+        "shap_vs_lime_rank_corr": 0.0,
+        "shap_vs_lime_top_k_overlap": 0.0,
+        "shap_complexity": 0.0,
+        "lime_complexity": 0.0
+    }
+    num_batches = 0
 
     for i, batch in enumerate(tqdm(test_loader, desc="Generating Explanations")):
         images, labels = batch["image"].to(args.device), batch["label"].to(args.device)
@@ -136,6 +147,28 @@ def main():
             true_label=eval_labels[0].item()
         )
         wandb.log({f"Explanation_Batch_{i}": wandb.Image(save_path)})
+        
+        # Accumulate for average
+        avg_metrics["shap_infidelity"] += shap_infidelity
+        avg_metrics["lime_infidelity"] += lime_infidelity
+        avg_metrics["shap_vs_lime_rank_corr"] += rank_corr
+        avg_metrics["shap_vs_lime_top_k_overlap"] += top_k_over
+        avg_metrics["shap_complexity"] += shap_complexity
+        avg_metrics["lime_complexity"] += lime_complexity
+        num_batches += 1
+
+    # Print final averages
+    if num_batches > 0:
+        print("\n" + "="*50)
+        print(f"AVERAGE XAI METRICS OVER {num_batches} BATCHES ({args.max_samples} samples max)")
+        print("="*50)
+        for k in avg_metrics.keys():
+            avg_metrics[k] /= num_batches
+            print(f"{k}: {avg_metrics[k]:.5f}")
+        print("="*50)
+        
+        # Log averages to W&B
+        wandb.log({f"avg_{k}": v for k, v in avg_metrics.items()})
 
     wandb.finish()
     print("Explanations complete and logged to W&B!")
