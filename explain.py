@@ -49,7 +49,7 @@ def load_model(args, n_classes, in_channels, num_equations=1, num_concepts=0):
         # Utilisation de 12 qubits et lightning.qubit suite aux résultats
         model = HybridQCNNClassifier(n_classes=n_classes, input_channel=in_channels, n_qubits=12, n_layers=1, backend="lightning.qubit", **kwargs)
     elif args.model == "hybrid_qvit":
-        model = HybridQViT(n_classes=n_classes, input_channel=in_channels, n_qubits=8, img_size=64, patch_size=8, backend="lightning.gpu", **kwargs)
+        model = HybridQViT(n_classes=n_classes, input_channel=in_channels, n_qubits=8, img_size=64, patch_size=8, backend="default.qubit", **kwargs)
 
         
     ckpt_path = f"checkpoints/{args.model}_{args.dataset}_best.pth"
