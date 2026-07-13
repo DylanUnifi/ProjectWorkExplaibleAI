@@ -1044,3 +1044,99 @@ class HybridQCNNClassifier(nn.Module):
             return logits
 
 
+class HybridQViT(nn.Module):
+    """
+    Quantum Vision Transformer.
+    Uses classical self-attention and a Quantum Circuit as the Feed-Forward/MLP block.
+    Dynamically resizes input to 64x64 to limit the number of patches (64 patches of 8x8).
+    """
+    def __init__(self, n_classes=3, input_channel=3, n_qubits=8, img_size=64, patch_size=8, backend="lightning.qubit", num_equations=1, num_concepts=0, **kwargs):
+        super().__init__()
+        self.n_classes = n_classes
+        self.num_equations = num_equations
+        self.num_concepts = num_concepts
+        
+        # Calculate number of patches
+        assert img_size % patch_size == 0
+        self.num_patches = (img_size // patch_size) ** 2
+        self.embed_dim = n_qubits  # Match embedding dimension to number of qubits
+        
+        # Patch Embedding
+        self.patch_embed = nn.Conv2d(input_channel, self.embed_dim, kernel_size=patch_size, stride=patch_size)
+        self.cls_token = nn.Parameter(torch.randn(1, 1, self.embed_dim))
+        self.pos_embed = nn.Parameter(torch.randn(1, self.num_patches + 1, self.embed_dim))
+        
+        # Transformer Block (Classical Self-Attention + Quantum MLP)
+        self.norm1 = nn.LayerNorm(self.embed_dim)
+        self.attn = nn.MultiheadAttention(embed_dim=self.embed_dim, num_heads=1, batch_first=True)
+        self.norm2 = nn.LayerNorm(self.embed_dim)
+        
+        # Quantum Layer as MLP
+        self.quantum_layer = _create_quantum_layer(n_qubits, n_layers=1, backend=backend)
+        
+        # Classification Head
+        self.head = nn.Linear(self.embed_dim, n_classes * max(1, num_equations))
+        
+        if self.num_concepts > 0:
+            self.concept_head = nn.Linear(self.embed_dim, self.num_concepts * 10)
+        else:
+            self.concept_head = None
+
+    def forward(self, x, return_features=False):
+        # Resize image dynamically to match img_size if needed
+        if x.shape[-1] != 64:
+            x = F.interpolate(x, size=(64, 64), mode='bilinear', align_corners=False)
+            
+        B = x.shape[0]
+        # Patch embedding
+        x = self.patch_embed(x)  # (B, embed_dim, H_p, W_p)
+        x = x.flatten(2).transpose(1, 2)  # (B, num_patches, embed_dim)
+        
+        # Add CLS token and Positional Embedding
+        cls_tokens = self.cls_token.expand(B, -1, -1)
+        x = torch.cat((cls_tokens, x), dim=1)  # (B, num_patches + 1, embed_dim)
+        x = x + self.pos_embed
+        
+        # Attention
+        x_norm1 = self.norm1(x)
+        attn_out, _ = self.attn(x_norm1, x_norm1, x_norm1)
+        x = x + attn_out
+        
+        # Quantum MLP (applied to each token)
+        x_norm2 = self.norm2(x)
+        # Reshape for quantum layer: (B * seq_len, embed_dim)
+        seq_len = x_norm2.shape[1]
+        x_flat = x_norm2.reshape(-1, self.embed_dim)
+        
+        # Project to quantum inputs [-pi, pi]
+        x_q_input = torch.tanh(x_flat) * np.pi
+        
+        # Quantum forward
+        x_q_out = self.quantum_layer(x_q_input)
+        
+        # Back to shape
+        x_q_out = x_q_out.reshape(B, seq_len, self.embed_dim).to(x.device)
+        
+        # Residual
+        x = x + x_q_out
+        
+        # Extract CLS token
+        cls_feat = x[:, 0]
+        
+        # Classification
+        logits = self.head(cls_feat)
+        if self.num_equations > 1:
+            logits = logits.view(B, self.num_equations, self.n_classes)
+            
+        concept_logits = None
+        if self.concept_head is not None:
+            concept_logits = self.concept_head(cls_feat).view(B, self.num_concepts, 10)
+            
+        if self.num_concepts > 0 or self.num_equations > 1:
+            if return_features:
+                return logits, cls_feat, concept_logits
+            return logits, concept_logits
+        else:
+            if return_features:
+                return logits, cls_feat
+            return logits

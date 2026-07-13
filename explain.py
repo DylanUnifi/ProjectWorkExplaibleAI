@@ -6,7 +6,7 @@ from tqdm import tqdm
 import wandb
 
 from dataset import get_cle4evr_loaders, get_clevr_hans_loaders, get_mnmath_loaders
-from model import ResNet50Classifier, ViTClassifier, ProtoPNet, HybridQCNNClassifier
+from model import ResNet50Classifier, ViTClassifier, ProtoPNet, HybridQCNNClassifier, HybridQViT
 from explainability.shap_explainer import SHAPExplainer
 from explainability.lime_explainer import LIMEExplainer
 from explainability.metrics import XAIMetrics
@@ -48,6 +48,8 @@ def load_model(args, n_classes, in_channels, num_equations=1, num_concepts=0):
     elif args.model == "hybrid_qcnn":
         # Utilisation de 12 qubits et lightning.qubit suite aux résultats
         model = HybridQCNNClassifier(n_classes=n_classes, input_channel=in_channels, n_qubits=12, n_layers=1, backend="lightning.qubit", **kwargs)
+    elif args.model == "hybrid_qvit":
+        model = HybridQViT(n_classes=n_classes, input_channel=in_channels, n_qubits=8, img_size=64, patch_size=8, backend="lightning.qubit", **kwargs)
 
         
     ckpt_path = f"checkpoints/{args.model}_{args.dataset}_best.pth"
