@@ -154,7 +154,7 @@ class ResNet50Classifier(nn.Module):
 
 import torch
 import torch.nn as nn
-from transformers import ViTForImageClassification, ViTConfig
+from transformers import ViTForImageClassification, ViTConfig, ViTModel
 
 class ViTClassifier(nn.Module):
     """
@@ -1109,41 +1109,31 @@ class HybridQCNNClassifier(nn.Module):
 
 class HybridQViT(nn.Module):
     """
-    Quantum Vision Transformer.
-    Uses classical self-attention and a Quantum Circuit as the Feed-Forward/MLP block.
-    Dynamically resizes input to 64x64 to limit the number of patches (64 patches of 8x8).
+    Quantum Vision Transformer (Fine-tuned).
+    Uses a pre-trained ViT for feature extraction and a Quantum Circuit as the classification head.
+    Resizes input to 224x224 to match ViT requirements.
     """
-    def __init__(self, n_classes=3, input_channel=3, n_qubits=8, img_size=64, patch_size=8, embed_dim=64, backend="default.qubit", num_equations=1, num_concepts=0, **kwargs):
+    def __init__(self, n_classes=3, input_channel=3, n_qubits=8, img_size=224, patch_size=16, embed_dim=768, backend="default.qubit", num_equations=1, num_concepts=0, **kwargs):
         super().__init__()
         self.n_classes = n_classes
         self.num_equations = num_equations
         self.num_concepts = num_concepts
         self.n_qubits = n_qubits
+        self.input_channels = input_channel
         
-        # Calculate number of patches
-        assert img_size % patch_size == 0
-        self.num_patches = (img_size // patch_size) ** 2
-        self.embed_dim = embed_dim  # Standard ViT embedding dimension
-        
-        # Patch Embedding
-        self.patch_embed = nn.Conv2d(input_channel, self.embed_dim, kernel_size=patch_size, stride=patch_size)
-        self.cls_token = nn.Parameter(torch.randn(1, 1, self.embed_dim))
-        self.pos_embed = nn.Parameter(torch.randn(1, self.num_patches + 1, self.embed_dim))
-        
-        # Transformer Block (Classical Self-Attention + Classical MLP)
-        self.norm1 = nn.LayerNorm(self.embed_dim)
-        self.attn = nn.MultiheadAttention(embed_dim=self.embed_dim, num_heads=4, batch_first=True)
-        self.norm2 = nn.LayerNorm(self.embed_dim)
-        self.mlp = nn.Sequential(
-            nn.Linear(self.embed_dim, self.embed_dim * 4),
-            nn.GELU(),
-            nn.Linear(self.embed_dim * 4, self.embed_dim)
+        # Load pre-trained ViT
+        self.vit = ViTModel.from_pretrained(
+            "google/vit-base-patch16-224-in21k",
+            add_pooling_layer=False
         )
+        
+        # We don't freeze the ViT (full fine-tuning)
+        self.embed_dim = self.vit.config.hidden_size # usually 768
         
         # Projection to Quantum space
         self.quantum_proj = nn.Linear(self.embed_dim, self.n_qubits)
         
-        # Quantum Layer (applied only to CLS token at the end)
+        # Quantum Layer (applied only to CLS token)
         self.quantum_layer = _create_quantum_layer(self.n_qubits, n_layers=1, backend=backend)
         
         # Classification Head
@@ -1155,31 +1145,23 @@ class HybridQViT(nn.Module):
             self.concept_head = None
 
     def forward(self, x, return_features=False):
-        # Resize image dynamically to match img_size if needed
-        if x.shape[-1] != 64:
-            x = F.interpolate(x, size=(64, 64), mode='bilinear', align_corners=False)
+        if self.input_channels == 1 and x.shape[1] == 1:
+            x = x.repeat(1, 3, 1, 1)  # (B, 3, H, W)
+            
+        # Resize image to match ViT expected size (224x224)
+        expected_size = self.vit.config.image_size
+        if x.shape[2] != expected_size or x.shape[3] != expected_size:
+            x = torch.nn.functional.interpolate(
+                x, size=(expected_size, expected_size), mode='bilinear', align_corners=False
+            )
             
         B = x.shape[0]
-        # Patch embedding
-        x = self.patch_embed(x)  # (B, embed_dim, H_p, W_p)
-        x = x.flatten(2).transpose(1, 2)  # (B, num_patches, embed_dim)
         
-        # Add CLS token and Positional Embedding
-        cls_tokens = self.cls_token.expand(B, -1, -1)
-        x = torch.cat((cls_tokens, x), dim=1)  # (B, num_patches + 1, embed_dim)
-        x = x + self.pos_embed
-        
-        # Attention
-        x_norm1 = self.norm1(x)
-        attn_out, _ = self.attn(x_norm1, x_norm1, x_norm1)
-        x = x + attn_out
-        
-        # Classical MLP (applied to each token)
-        x_norm2 = self.norm2(x)
-        x = x + self.mlp(x_norm2)
-        
-        # Extract CLS token
-        cls_feat = x[:, 0]
+        # Extract features using pre-trained ViT
+        outputs = self.vit(pixel_values=x)
+        # last_hidden_state shape: (B, sequence_length, hidden_size)
+        # CLS token is at index 0
+        cls_feat = outputs.last_hidden_state[:, 0, :]
         
         # Project CLS token to quantum dimension
         cls_q = self.quantum_proj(cls_feat)
@@ -1187,7 +1169,7 @@ class HybridQViT(nn.Module):
         # Project CLS token to quantum inputs [-pi, pi]
         q_input = torch.tanh(cls_q) * np.pi
         
-        # Quantum forward (ONLY B evaluations instead of B*seq_len)
+        # Quantum forward
         q_out = self.quantum_layer(q_input)
         q_out = q_out.reshape(B, self.n_qubits).to(x.device)
         
