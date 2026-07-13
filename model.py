@@ -1119,6 +1119,7 @@ class HybridQViT(nn.Module):
         
         # Quantum forward (ONLY B evaluations instead of B*seq_len)
         q_out = self.quantum_layer(q_input)
+        q_out = q_out.reshape(B, self.embed_dim).to(x.device)
         
         # Classification
         logits = self.head(q_out)
