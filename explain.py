@@ -47,7 +47,7 @@ def load_model(args, n_classes, in_channels, num_equations=1, num_concepts=0):
         model = ProtoPNet(n_classes=n_classes, input_channels=in_channels, n_prototypes_per_class=10, **kwargs)
     elif args.model == "hybrid_qcnn":
         # Retour à 8 qubits pour éviter le surapprentissage (overfitting massif à 12 qubits)
-        model = HybridQCNNClassifier(n_classes=n_classes, input_channel=in_channels, n_qubits=8, n_layers=1, backend="lightning.qubit", **kwargs)
+        model = HybridQCNNClassifier(n_classes=n_classes, input_channel=in_channels, n_qubits=8, n_layers=1, backend="lightning.gpu", **kwargs)
     elif args.model == "hybrid_qvit":
         model = HybridQViT(n_classes=n_classes, input_channel=in_channels, n_qubits=8, img_size=64, patch_size=8, backend="default.qubit", **kwargs)
 
