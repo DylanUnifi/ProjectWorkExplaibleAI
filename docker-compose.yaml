@@ -67,7 +67,7 @@ services:
         --dataset cle4evr
         --model vit
         --epochs 100
-        --batch_size 512
+        --batch_size 64
 
   train_protopnet_clevr:
     <<: *gpu-config
@@ -94,7 +94,7 @@ services:
         --dataset cle4evr
         --model hybrid_qvit
         --epochs 10
-        --batch_size 512
+        --batch_size 64
 
 
   # ════════════════════════════════════════════════════════════════════
@@ -150,7 +150,7 @@ services:
         --dataset mnmath
         --model vit
         --epochs 100
-        --batch_size 512
+        --batch_size 64
 
   train_protopnet_mnmath:
     <<: *gpu-config
@@ -177,7 +177,7 @@ services:
         --dataset mnmath
         --model hybrid_qvit
         --epochs 10
-        --batch_size 512
+        --batch_size 64
 
   # MNMath Explain Services
   explain_resnet50_mnmath:
