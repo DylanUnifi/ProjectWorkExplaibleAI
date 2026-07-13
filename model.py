@@ -945,7 +945,7 @@ class HybridQCNNClassifier(nn.Module):
         self,
         n_classes=3,
         input_channel=3,
-        n_qubits=4,
+        n_qubits=8,
         n_layers=1,
         backend="lightning.qubit",
         conv_channels=None,
