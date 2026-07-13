@@ -913,6 +913,59 @@ class ResidualBlock(nn.Module):
         return F.relu(out)
 
 
+def U_SU4(params, wires):
+    """Universal 2-qubit gate with 15 parameters."""
+    qml.U3(params[0], params[1], params[2], wires=wires[0])
+    qml.U3(params[3], params[4], params[5], wires=wires[1])
+    qml.CNOT(wires=[wires[0], wires[1]])
+    qml.RY(params[6], wires=wires[0])
+    qml.RZ(params[7], wires=wires[1])
+    qml.CNOT(wires=[wires[1], wires[0]])
+    qml.RY(params[8], wires=wires[0])
+    qml.CNOT(wires=[wires[0], wires[1]])
+    qml.U3(params[9], params[10], params[11], wires=wires[0])
+    qml.U3(params[12], params[13], params[14], wires=wires[1])
+
+
+def _create_true_qcnn_layer(n_qubits=8, backend="default.qubit"):
+    """Create a True QCNN layer with Weight Sharing and hierarchical structure."""
+    assert n_qubits == 8, "This specific QCNN architecture requires exactly 8 qubits."
+    dev = qml.device(backend, wires=n_qubits)
+
+    @qml.qnode(dev, interface="torch", diff_method="adjoint")
+    def qnode(inputs, weights):
+        qml.templates.AngleEmbedding(inputs, wires=range(n_qubits), rotation="Y")
+        
+        # Weight shape is (5, 15) -> 75 parameters total
+        
+        # Conv Layer 1 (adjacent pairs)
+        for i in range(0, 8, 2):
+            U_SU4(weights[0], wires=[i, i + 1])
+            
+        # Conv Layer 1 Shifted
+        for i in range(1, 7, 2):
+            U_SU4(weights[1], wires=[i, i + 1])
+        U_SU4(weights[1], wires=[7, 0])
+            
+        # Conv Layer 2
+        U_SU4(weights[2], wires=[2, 4])
+        U_SU4(weights[2], wires=[6, 0])
+        
+        # Conv Layer 2 Shifted
+        U_SU4(weights[3], wires=[0, 2])
+        U_SU4(weights[3], wires=[4, 6])
+        
+        # Conv Layer 3
+        U_SU4(weights[4], wires=[2, 6])
+        
+        return tuple(qml.expval(qml.PauliZ(i)) for i in range(n_qubits))
+
+    weight_shapes = {"weights": (5, 15)}
+    layer = qml.qnn.TorchLayer(qnode, weight_shapes)
+    return layer
+
+
+
 def _create_quantum_layer(n_qubits, n_layers=2, backend="lightning.gpu"):
     """Create PennyLane quantum layer."""
     dev = qml.device(backend, wires=n_qubits)
@@ -987,9 +1040,13 @@ class HybridQCNNClassifier(nn.Module):
             prev_dim = hidden_dim
         self.classical_head = nn.Sequential(*fc_layers)
 
-        # Quantum layer
+        # Quantum layer (True QCNN instead of Generic VQC)
         self.quantum_fc_input = nn.Linear(prev_dim, n_qubits)
-        self.quantum_layer = _create_quantum_layer(n_qubits, n_layers, backend=backend)
+        if n_qubits == 8:
+            self.quantum_layer = _create_true_qcnn_layer(n_qubits, backend=backend)
+        else:
+            # Fallback to generic layer if not 8 qubits
+            self.quantum_layer = _create_quantum_layer(n_qubits, n_layers, backend=backend)
         self.bn_q = nn.LayerNorm(n_qubits)
 
         # Multi-class output
