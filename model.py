@@ -1050,7 +1050,7 @@ class HybridQViT(nn.Module):
     Uses classical self-attention and a Quantum Circuit as the Feed-Forward/MLP block.
     Dynamically resizes input to 64x64 to limit the number of patches (64 patches of 8x8).
     """
-    def __init__(self, n_classes=3, input_channel=3, n_qubits=4, img_size=64, patch_size=8, embed_dim=64, backend="default.qubit", num_equations=1, num_concepts=0, **kwargs):
+    def __init__(self, n_classes=3, input_channel=3, n_qubits=8, img_size=64, patch_size=8, embed_dim=64, backend="default.qubit", num_equations=1, num_concepts=0, **kwargs):
         super().__init__()
         self.n_classes = n_classes
         self.num_equations = num_equations

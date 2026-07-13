@@ -114,7 +114,7 @@ def main():
     elif args.model == "hybrid_qcnn":
         model = HybridQCNNClassifier(n_classes=n_classes, input_channel=in_channels, n_qubits=12, n_layers=1, backend="lightning.qubit", **kwargs)
     elif args.model == "hybrid_qvit":
-        model = HybridQViT(n_classes=n_classes, input_channel=in_channels, n_qubits=4, img_size=64, patch_size=8, backend="default.qubit", **kwargs)
+        model = HybridQViT(n_classes=n_classes, input_channel=in_channels, n_qubits=8, img_size=64, patch_size=8, backend="default.qubit", **kwargs)
 
     model = model.to(args.device)
     
