@@ -1,7 +1,7 @@
 # explainability/lime_explainer.py
 
 from lime import lime_image
-from skimage.segmentation import mark_boundaries
+from skimage.segmentation import mark_boundaries, slic
 import torch
 import numpy as np
 from PIL import Image
@@ -65,16 +65,12 @@ class LIMEExplainer:
             unnorm_image = (image.cpu() * self.std.cpu() + self.mean.cpu())
             img_np = (unnorm_image.permute(1, 2, 0).detach().numpy() * 255).clip(0, 255).astype(np.uint8)
             
-            # Custom segmentation for MNMath (32x128 grid)
-            if img_np.shape[0] == 32 and img_np.shape[1] == 128:
-                def custom_segmentation(img):
-                    segments = np.zeros(img.shape[:2], dtype=int)
-                    for j in range(4):
-                        segments[:, j*32:(j+1)*32] = j
-                    return segments
-                segmentation_fn = custom_segmentation
-            else:
-                segmentation_fn = None
+            # Force tiny superpixels for all datasets using SLIC
+            def custom_segmentation(img):
+                # n_segments=200 creates very small superpixels
+                # compactness controls shape regularity
+                return slic(img, n_segments=200, compactness=10, start_label=0)
+            segmentation_fn = custom_segmentation
                 
             # Explain
             explanation = self.explainer.explain_instance(
@@ -87,11 +83,11 @@ class LIMEExplainer:
                 segmentation_fn=segmentation_fn,
             )
             
-            # Get mask for top class
+            # Get mask for top class (using 50 features since superpixels are tiny)
             temp, mask = explanation.get_image_and_mask(
                 explanation.top_labels[0],
                 positive_only=True,
-                num_features=num_features,
+                num_features=50,
                 hide_rest=False,
             )
             batch_masks.append(torch.from_numpy(mask).float().unsqueeze(0))
@@ -106,7 +102,7 @@ class LIMEExplainer:
         temp, mask = explanation.get_image_and_mask(
             explanation.top_labels[0],
             positive_only=True,
-            num_features=10,
+            num_features=50,
             hide_rest=False,
         )
         
