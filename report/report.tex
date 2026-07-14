@@ -90,6 +90,7 @@ When evaluating ResNet50 and ViT, the post-hoc methods exhibited strong dependen
 \begin{table}[!t]
 \caption{Post-Hoc Metrics on ResNet50 and ViT (Mean over batches)}
 \begin{center}
+\resizebox{\columnwidth}{!}{
 \begin{tabular}{|c|c|c|c|c|}
 \hline
 \textbf{Dataset} & \textbf{Model} & \textbf{Explainer} & \textbf{Infidelity $\downarrow$} & \textbf{Complexity $\downarrow$} \\
@@ -111,6 +112,7 @@ When evaluating ResNet50 and ViT, the post-hoc methods exhibited strong dependen
 & & LIME & [XX.X] & [X.XXX] \\
 \hline
 \end{tabular}
+}
 \label{tab:classical_metrics}
 \end{center}
 \end{table}
@@ -140,6 +142,7 @@ The most significant finding of this study emerged when evaluating ProtoPNet. We
 \begin{table}[!t]
 \caption{ProtoPNet Intrinsic vs Post-Hoc Metrics}
 \begin{center}
+\resizebox{\columnwidth}{!}{
 \begin{tabular}{|c|c|c|c|c|}
 \hline
 \textbf{Dataset} & \textbf{Method} & \textbf{Infidelity $\downarrow$} & \textbf{Complexity $\downarrow$} & \textbf{Localization $\uparrow$} \\
@@ -153,6 +156,7 @@ The most significant finding of this study emerged when evaluating ProtoPNet. We
 & \textbf{Internal} & 46.908 & \textbf{0.170} & 0.173 \\
 \hline
 \end{tabular}
+}
 \label{tab:protopnet_metrics}
 \end{center}
 \end{table}
@@ -176,7 +180,7 @@ The most significant finding of this study emerged when evaluating ProtoPNet. We
 As shown by the negative rank correlation (\textbf{$-0.09$} on CLE4EVR, \textbf{$-0.24$} on MNMath) in Fig. \ref{fig:heatmap}, SHAP and the internal reasoning of ProtoPNet are in complete disagreement. 
 \begin{itemize}
     \item \textbf{SHAP} highlights fine edges and bright pixels, producing a highly sparse explanation (\textbf{Complexity: 0.001}).
-    \item \textbf{ProtoPNet Internal} highlights broad, diffuse spatial regions, including the objects and their surrounding context (\textbf{Complexity: 0.52}, see Fig. \ref{fig:grid_comparison}).
+    \item \textbf{ProtoPNet Internal} highlights broad, diffuse spatial regions, including the objects and their surrounding context (\textbf{Complexity: 0.52}, see Fig. \ref{fig:protopnet_grids}).
 \end{itemize}
 
 While SHAP achieves higher localization accuracy against strict bounding boxes, it fails to represent how the network actually reasons. ProtoPNet learns prototypes that capture broader contextual relationships (e.g., "object glow" or "inter-object spacing") rather than strict object boundaries.
