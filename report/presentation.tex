@@ -1,11 +1,28 @@
-\documentclass{beamer}
+\documentclass[aspectratio=169]{beamer}
 
+% Thème et Couleurs Université de Florence (Unifi) - WCAG Compliant
 \usetheme{Madrid}
-\usecolortheme{default}
+\definecolor{unifiblue}{RGB}{0, 43, 92} % Pantone 280 C - Excellent contraste avec le blanc
+\definecolor{unifibluelight}{RGB}{0, 75, 140}
+\definecolor{white}{RGB}{255, 255, 255}
+
+\usecolortheme[named=unifiblue]{structure}
+\setbeamercolor{palette primary}{bg=unifiblue,fg=white}
+\setbeamercolor{palette secondary}{bg=unifibluelight,fg=white}
+\setbeamercolor{palette tertiary}{bg=unifiblue,fg=white}
+\setbeamercolor{palette quaternary}{bg=unifiblue,fg=white}
+\setbeamercolor{title}{bg=unifiblue,fg=white}
+\setbeamercolor{frametitle}{bg=unifiblue,fg=white}
+\setbeamercolor{item}{fg=unifiblue}
+\setbeamercolor{block title}{bg=unifiblue,fg=white}
+\setbeamercolor{block body}{bg=white,fg=black}
+
+\usepackage{graphicx}
+\usepackage{booktabs}
 
 \title[XAI Comparative Study]{Comparative Study of Post-Hoc Methods vs Intrinsic Interpretability in Vision Models}
 \author{Fouepe Dylan}
-\institute{University of Florence}
+\institute[Unifi]{University of Florence}
 \date{June 2026}
 
 \begin{document}
@@ -15,91 +32,107 @@
 \end{frame}
 
 \begin{frame}{Context and Motivation}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \textbf{The "Black Box" Problem}
+            \begin{itemize}
+                \item Deep learning models (CNNs, ViTs) have opaque decision-making processes.
+                \item \textbf{Post-Hoc XAI}: Explainers applied \textit{after} training (SHAP, LIME).
+                \item \textbf{Intrinsic XAI}: Models interpretable by design (ProtoPNet).
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{center}
+                % Placeholder pour une image de concept XAI
+                \includegraphics[width=0.9\textwidth, height=0.6\textheight, keepaspectratio]{example-image-a} % Remplacez par votre schéma XAI
+            \end{center}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Experimental Setup \& Metrics}
+    \begin{columns}
+        \begin{column}{0.4\textwidth}
+            \textbf{Datasets}
+            \begin{itemize}
+                \item \textit{CLE4EVR}: 3D rendered objects.
+                \item \textit{MNMath}: Handwritten equations.
+            \end{itemize}
+            \vspace{0.3cm}
+            \textbf{Key Metrics}
+            \begin{itemize}
+                \item \textit{Infidelity}
+                \item \textit{Complexity}
+                \item \textit{Localization}
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.6\textwidth}
+            \begin{center}
+                % Remplacer par l'image des graphiques de métriques
+                \includegraphics[width=\textwidth, height=0.7\textheight, keepaspectratio]{explanations/protopnet_cle4evr_metrics_comparison.png}
+            \end{center}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Results: Post-Hoc on Classical Backbones}
+    \begin{center}
+        % Remplacer par une image montrant SHAP/LIME sur ResNet
+        \includegraphics[width=0.8\textwidth, height=0.7\textheight, keepaspectratio]{example-image-b} % Remplacer par vit_cle4evr_batch_0_grid.png
+    \end{center}
     \begin{itemize}
-        \item Deep learning models (CNNs, ViTs) have opaque decision-making processes.
-        \item \textbf{Post-Hoc XAI}: Methods like SHAP, LIME, and GradCAM attempt to explain models \textit{after} training by analyzing inputs and outputs.
-        \item \textbf{Intrinsic XAI}: Models like ProtoPNet are designed to be interpretable by default.
-        \item \textbf{Goal}: Compare how these explanations behave across different architectures and datasets, and evaluate if post-hoc methods accurately reflect a network's true reasoning.
+        \item \textbf{GradCAM} excels on large 3D objects (CLE4EVR) but fails on fine strokes (MNMath).
+        \item \textbf{LIME} struggles with default superpixels on large objects (fragmentation).
     \end{itemize}
 \end{frame}
 
-\begin{frame}{Experimental Setup}
-    \textbf{Datasets:}
-    \begin{itemize}
-        \item \textit{CLE4EVR}: 3D rendered objects (focus on spatial localization of large objects).
-        \item \textit{MNMath}: Handwritten mathematical equations (focus on fine-grained strokes).
-    \end{itemize}
-    \vspace{0.5cm}
-    \textbf{Models evaluated:}
-    \begin{itemize}
-        \item ResNet50 (Classical CNN)
-        \item Vision Transformer (ViT)
-        \item ProtoPNet (Inherently interpretable)
-    \end{itemize}
+\begin{frame}{The Clash of Paradigms: ProtoPNet vs Post-Hoc}
+    \begin{center}
+        \textbf{Visual Comparison on CLE4EVR} \\
+        \vspace{0.2cm}
+        \includegraphics[width=\textwidth, height=0.65\textheight, keepaspectratio]{explanations/protopnet_cle4evr_batch_0_grid.png}
+    \end{center}
+    \vspace{-0.2cm}
+    \small{\textbf{SHAP} highlights fine edges (sparse). \textbf{ProtoPNet Internal} highlights broad, context-aware regions.}
 \end{frame}
 
-\begin{frame}{Explainers and Metrics}
-    \textbf{Evaluated Explainers:}
-    \begin{itemize}
-        \item SHAP (Perturbation / Game Theory)
-        \item LIME (Local surrogate)
-        \item GradCAM (Feature gradients)
-        \item \textbf{ProtoPNet Internal} (Direct extraction of prototype spatial similarities)
-    \end{itemize}
-    \vspace{0.5cm}
-    \textbf{Evaluation Metrics:}
-    \begin{itemize}
-        \item \textit{Infidelity}: Do important pixels actually affect the prediction?
-        \item \textit{Complexity}: How sparse is the explanation?
-        \item \textit{Localization}: Does the explanation overlap with bounding boxes?
-        \item \textit{Rank Agreement}: Do two methods agree on pixel importance?
-    \end{itemize}
+\begin{frame}{The Clash of Paradigms: Fine-grained (MNMath)}
+    \begin{center}
+        \textbf{Visual Comparison on MNMath} \\
+        \vspace{0.2cm}
+        \includegraphics[width=\textwidth, height=0.65\textheight, keepaspectratio]{explanations/protopnet_mnmath_batch_0_grid.png}
+    \end{center}
+    \vspace{-0.2cm}
+    \small{\textbf{ProtoPNet} reasoning encompasses the whole digit and its context, completely ignoring the strict "stroke" pixels favored by SHAP.}
 \end{frame}
 
-\begin{frame}{Results: Classical Backbones (ResNet/ViT)}
-    \textbf{Key findings on post-hoc methods:}
-    \begin{itemize}
-        \item \textbf{Scale matters}: GradCAM performs very poorly on MNMath due to its low spatial resolution, but excels on CLE4EVR where objects match its receptive field.
-        \item \textbf{LIME's limitation}: LIME struggles on CLE4EVR due to superpixel fragmentation. 
-        \item \textbf{Ablation Study}: Forcing LIME to use larger superpixels improves visual alignment but destroys its fidelity, proving linear surrogates struggle with large object semantics.
-    \end{itemize}
-\end{frame}
-
-\begin{frame}{Results: Post-Hoc vs Intrinsic}
-    \textbf{The ProtoPNet Experiment:}
-    \begin{itemize}
-        \item We ran SHAP and LIME on ProtoPNet.
-        \item We compared them against ProtoPNet's own internal explanations.
-    \end{itemize}
-    \vspace{0.5cm}
-    \begin{block}{The Clash of Paradigms}
-    SHAP highlights fine edges (Complexity: 0.001) resulting in high localization scores. \\
-    ProtoPNet internally uses broad, context-aware regions (Complexity: 0.52).
-    \end{block}
-\end{frame}
-
-\begin{frame}{Results: The Agreement Matrix}
-    \textbf{Total Disagreement:}
-    \begin{itemize}
-        \item Rank correlation between SHAP and ProtoPNet Internal is \textbf{negative} (-0.24 on MNMath).
-        \item Pixels that SHAP claims are "most important" are not highly ranked by the model's actual reasoning process.
-        \item Post-hoc methods provide explanations that look good to humans, but misrepresent the neural network.
-    \end{itemize}
+\begin{frame}{Rank Agreement: Total Disagreement}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \begin{itemize}
+                \item Rank correlation between SHAP and ProtoPNet Internal is \textbf{negative} (e.g. -0.24).
+                \item Post-hoc methods provide neat, edge-aligned explanations that look good to humans...
+                \item ...but they misrepresent the actual broad spatial reasoning of the network!
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{center}
+                \includegraphics[width=\textwidth, height=0.7\textheight, keepaspectratio]{explanations/protopnet_cle4evr_agreement_heatmap.png}
+            \end{center}
+        \end{column}
+    \end{columns}
 \end{frame}
 
 \begin{frame}{Conclusion}
-    \begin{itemize}
-        \item There is no universal "best" post-hoc XAI method; performance is heavily dependent on object scale and network architecture.
-        \item Relying strictly on "Localization Accuracy" is dangerous: it assumes networks reason using human-defined object boundaries.
-        \item Intrinsic interpretability reveals that models learn broad spatial contexts.
-        \item \textbf{Future Work}: Extend the comparative framework to Quantum Neural Networks.
-    \end{itemize}
-\end{frame}
-
-\begin{frame}
+    \begin{block}{Key Takeaways}
+        \begin{itemize}
+            \item Relying strictly on "Localization Accuracy" is dangerous: it assumes networks reason using human-defined object boundaries.
+            \item Intrinsic interpretability reveals that models learn broad spatial contexts, unlike what post-hoc methods suggest.
+        \end{itemize}
+    \end{block}
     \begin{center}
+        \vspace{0.5cm}
         \Huge Thank You! \\
-        \vspace{1cm}
         \large Questions?
     \end{center}
 \end{frame}

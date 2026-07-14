@@ -100,10 +100,16 @@ The most significant finding of this study emerged when evaluating ProtoPNet. We
 \label{fig:heatmap}
 \end{figure}
 
-As shown by the negative rank correlation ($-0.09$ on CLE4EVR, $-0.24$ on MNMath), SHAP and the internal reasoning of ProtoPNet are in complete disagreement. 
+\begin{figure*}[htbp]
+\centerline{\includegraphics[width=\textwidth]{explanations/protopnet_cle4evr_batch_0_grid.png}}
+\caption{Visual comparison of SHAP, LIME, and ProtoPNet Internal on CLE4EVR. SHAP isolates edges, while ProtoPNet highlights broad spatial contexts.}
+\label{fig:grid_comparison}
+\end{figure*}
+
+As shown by the negative rank correlation ($-0.09$ on CLE4EVR, $-0.24$ on MNMath) in Fig. \ref{fig:heatmap}, SHAP and the internal reasoning of ProtoPNet are in complete disagreement. 
 \begin{itemize}
     \item \textbf{SHAP} highlights fine edges and bright pixels, producing a highly sparse explanation (Complexity: 0.001).
-    \item \textbf{ProtoPNet Internal} highlights broad, diffuse spatial regions, including the objects and their surrounding context (Complexity: 0.52).
+    \item \textbf{ProtoPNet Internal} highlights broad, diffuse spatial regions, including the objects and their surrounding context (Complexity: 0.52, see Fig. \ref{fig:grid_comparison}).
 \end{itemize}
 
 While SHAP achieves higher localization accuracy against strict bounding boxes, it fails to represent how the network actually reasons. ProtoPNet learns prototypes that capture broader contextual relationships (e.g., "object glow" or "inter-object spacing") rather than strict object boundaries.
