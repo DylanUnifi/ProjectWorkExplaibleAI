@@ -34,26 +34,30 @@
 
 \begin{frame}{Context and Motivation}
     \begin{columns}
-        \begin{column}{0.5\textwidth}
+        \begin{column}{0.45\textwidth}
             \textbf{The "Black Box" Problem}
             \begin{itemize}
                 \item Deep learning models (CNNs, ViTs) have opaque decision-making processes.
-                \item \textbf{Post-Hoc XAI}: Explainers applied \textit{after} training.
-                \item \textbf{Intrinsic XAI}: Models interpretable by design.
+                \item \textbf{Post-Hoc XAI}: Explainers applied \textit{after} training (e.g., \textbf{SHAP}, \textbf{LIME}).
+                \item \textbf{Intrinsic XAI}: Models interpretable by design (e.g., \textbf{ProtoPNet}).
             \end{itemize}
         \end{column}
-        \begin{column}{0.5\textwidth}
+        \begin{column}{0.55\textwidth}
             \begin{block}{ProtoPNet Similarity}
                 \vspace{-0.4cm}
+                {\small
                 \begin{equation*}
                 sim(\mathbf{z}, \mathbf{p}_j) = \log\left(\frac{d^2(\mathbf{z}, \mathbf{p}_j) + 1}{d^2(\mathbf{z}, \mathbf{p}_j) + \epsilon}\right)
                 \end{equation*}
+                }
             \end{block}
             \begin{block}{SHAP (Shapley Values)}
                 \vspace{-0.4cm}
+                {\small
                 \begin{equation*}
-                \phi_i(v) = \sum_{S \subseteq N \setminus \{i\}} \frac{|S|! (n - |S| - 1)!}{n!} [v(S \cup \{i\}) - v(S)]
+                \phi_i(v) = \sum_{S} \frac{|S|! (n - |S| - 1)!}{n!} [v(S \cup \{i\}) - v(S)]
                 \end{equation*}
+                }
             \end{block}
         \end{column}
     \end{columns}
@@ -109,6 +113,37 @@
         \item \textbf{GradCAM} performs well: large 3D objects match its coarse receptive field.
         \item \textbf{LIME} underperforms: default SLIC superpixels severely fragment the smooth 3D shapes.
     \end{itemize}
+\end{frame}
+
+\begin{frame}{LIME Ablation Study on CLE4EVR}
+    \begin{columns}
+        \begin{column}{0.55\textwidth}
+            \textbf{Hypothesis}: Does matching LIME's superpixel count to the number of objects improve explanations?
+            \vspace{0.2cm}
+            \begin{itemize}
+                \item \textbf{Default ($K=50$)}: Fragments smooth 3D shapes.
+                \item \textbf{Matched ($K \approx 4$)}: Visually aligns with boundaries, but \textit{Infidelity doubles} (from 16.0 to 34.2).
+            \end{itemize}
+            \vspace{0.2cm}
+            \textbf{Conclusion}: Linear surrogates fail to capture the non-linear reasoning of CNNs over large objects, even with perfect segmentation.
+        \end{column}
+        \begin{column}{0.45\textwidth}
+            \begin{table}
+            \caption{LIME Segment Ablation Results}
+            \resizebox{\textwidth}{!}{
+            \begin{tabular}{|c|c|c|}
+            \hline
+            \textbf{Superpixels ($K$)} & \textbf{Alignment} & \textbf{Infidelity $\downarrow$} \\
+            \hline
+            Default (50) & Fragmented & 16.010 \\
+            Match Objects (4) & Object-Aligned & 34.250 \\
+            Dense (100) & Highly Fragmented & 12.100 \\
+            \hline
+            \end{tabular}
+            }
+            \end{table}
+        \end{column}
+    \end{columns}
 \end{frame}
 
 \begin{frame}{Post-Hoc Methods on MNMath Dataset}

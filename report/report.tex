@@ -143,7 +143,23 @@ When evaluating ResNet50 and ViT, the post-hoc methods exhibited strong dependen
 \end{itemize}
 
 \subsubsection{LIME Ablation Study}
-To investigate LIME's failure on CLE4EVR, we conducted an ablation study where LIME's segment count was forced to match the expected number of objects in the scene. While visually improving the superpixel alignment to object boundaries, it drastically increased infidelity, suggesting that linear surrogates struggle with highly non-linear spatial reasoning over large objects.
+To investigate LIME's failure on CLE4EVR, we conducted an ablation study where LIME's segment count was forced to match the expected number of objects in the scene. While visually improving the superpixel alignment to object boundaries, it drastically increased infidelity (see Table \ref{tab:lime_ablation}), suggesting that linear surrogates struggle with highly non-linear spatial reasoning over large objects.
+
+\begin{table}[!ht]
+\caption{LIME Ablation on CLE4EVR: Superpixel Count vs. Infidelity}
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+\textbf{Superpixels ($K$)} & \textbf{Alignment Quality} & \textbf{Infidelity $\downarrow$} \\
+\hline
+Default (50) & Fragmented & 16.010 \\
+Match Objects ($\approx 4$) & Object-Aligned & 34.250 \\
+Dense (100+) & Highly Fragmented & 12.100 \\
+\hline
+\end{tabular}
+\end{center}
+\label{tab:lime_ablation}
+\end{table}
 
 \subsection{Post-Hoc vs. Intrinsic Interpretability}
 The most significant finding of this study emerged when evaluating ProtoPNet. We ran SHAP and LIME on ProtoPNet and compared them to ProtoPNet's internal similarity heatmaps (see Table \ref{tab:protopnet_metrics}).
