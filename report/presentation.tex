@@ -43,38 +43,44 @@
 \end{frame}
 
 \begin{frame}{Mathematical Foundations: XAI Methods}
-    \begin{block}{SHAP (Shapley Values)}
-        \vspace{-0.4cm}
-        {\small
-        \begin{equation*}
-        \phi_i = \sum_{S} \frac{|S|! (n - |S| - 1)!}{n!} \Delta v
-        \end{equation*}
-        }
-    \end{block}
-    \begin{block}{LIME (Local Surrogate)}
-        \vspace{-0.4cm}
-        {\small
-        \begin{equation*}
-        \xi(x) = \underset{g \in G}{\text{arg\,min}} \,\, \mathcal{L} + \Omega(g)
-        \end{equation*}
-        }
-    \end{block}
-    \begin{block}{GradCAM}
-        \vspace{-0.4cm}
-        {\small
-        \begin{equation*}
-        L_{Grad-CAM}^c = ReLU \left( \sum_k \alpha_k^c A^k \right)
-        \end{equation*}
-        }
-    \end{block}
-    \begin{block}{ProtoPNet Similarity}
-        \vspace{-0.4cm}
-        {\small
-        \begin{equation*}
-        sim = \log\left(\frac{d^2 + 1}{d^2 + \epsilon}\right)
-        \end{equation*}
-        }
-    \end{block}
+    \begin{columns}
+        \begin{column}{0.48\textwidth}
+            \begin{block}{SHAP (Shapley Values)}
+                \vspace{-0.4cm}
+                {\small
+                \begin{equation*}
+                \phi_i = \sum_{S} \frac{|S|! (n - |S| - 1)!}{n!} \Delta v
+                \end{equation*}
+                }
+            \end{block}
+            \begin{block}{LIME (Local Surrogate)}
+                \vspace{-0.4cm}
+                {\small
+                \begin{equation*}
+                \xi(x) = \underset{g \in G}{\text{arg\,min}} \,\, \mathcal{L} + \Omega(g)
+                \end{equation*}
+                }
+            \end{block}
+        \end{column}
+        \begin{column}{0.48\textwidth}
+            \begin{block}{GradCAM}
+                \vspace{-0.4cm}
+                {\small
+                \begin{equation*}
+                L_{Grad-CAM}^c = ReLU \left( \sum_k \alpha_k^c A^k \right)
+                \end{equation*}
+                }
+            \end{block}
+            \begin{block}{ProtoPNet Similarity}
+                \vspace{-0.4cm}
+                {\small
+                \begin{equation*}
+                sim = \log\left(\frac{d^2 + 1}{d^2 + \epsilon}\right)
+                \end{equation*}
+                }
+            \end{block}
+        \end{column}
+    \end{columns}
 \end{frame}
 
 \begin{frame}{Mathematical Foundations: Metrics}
@@ -137,12 +143,20 @@
 \end{frame}
 
 \begin{frame}{Post-Hoc Methods on CLE4EVR Dataset}
-    \begin{center}
-        \textbf{ResNet50} \\
-        \includegraphics[width=\textwidth, height=0.22\textheight, keepaspectratio]{explanations/resnet50_cle4evr_batch_0_grid.png} \\
-        \textbf{Vision Transformer (ViT)} \\
-        \includegraphics[width=\textwidth, height=0.22\textheight, keepaspectratio]{explanations/vit_cle4evr_batch_0_grid.png}
-    \end{center}
+    \begin{columns}
+        \begin{column}{0.48\textwidth}
+            \begin{center}
+                \textbf{ResNet50} \\
+                \includegraphics[width=\textwidth, height=0.45\textheight, keepaspectratio]{explanations/resnet50_cle4evr_batch_0_grid.png}
+            \end{center}
+        \end{column}
+        \begin{column}{0.48\textwidth}
+            \begin{center}
+                \textbf{Vision Transformer (ViT)} \\
+                \includegraphics[width=\textwidth, height=0.45\textheight, keepaspectratio]{explanations/vit_cle4evr_batch_0_grid.png}
+            \end{center}
+        \end{column}
+    \end{columns}
     \vspace{-0.2cm}
     \begin{itemize}
         \item \textbf{GradCAM} performs well: large 3D objects match its coarse receptive field.
@@ -153,7 +167,7 @@
 
 \begin{frame}{LIME Ablation Study on CLE4EVR}
     \begin{columns}
-        \begin{column}{0.55\textwidth}
+        \begin{column}{0.5\textwidth}
             \textbf{Hypothesis}: Does matching LIME's superpixel count to the number of objects improve explanations?
             \vspace{0.2cm}
             \begin{itemize}
@@ -161,34 +175,48 @@
                 \item \textbf{Matched ($K \approx 4$)}: Visually aligns with boundaries, but \textit{Infidelity doubles} (from 16.0 to 34.2).
             \end{itemize}
             \vspace{0.2cm}
-            \textbf{Conclusion}: Linear surrogates fail to capture the non-linear reasoning of CNNs over large objects, even with perfect segmentation.
-        \end{column}
-        \begin{column}{0.45\textwidth}
+            \textbf{Conclusion}: Linear surrogates fail to capture the non-linear reasoning of CNNs.
+            \vspace{0.2cm}
             \begin{table}
-            \caption{LIME Segment Ablation Results}
             \resizebox{\textwidth}{!}{
             \begin{tabular}{|c|c|c|}
             \hline
             \textbf{Superpixels ($K$)} & \textbf{Alignment} & \textbf{Infidelity $\downarrow$} \\
             \hline
             Default (50) & Fragmented & 16.010 \\
-            Match Objects (4) & Object-Aligned & 34.250 \\
+            Match (4) & Object-Aligned & 34.250 \\
             Dense (100) & Highly Fragmented & 12.100 \\
             \hline
             \end{tabular}
             }
             \end{table}
         \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{center}
+                \textbf{Default LIME ($K=50$)} \\
+                \includegraphics[width=\textwidth, height=0.35\textheight, keepaspectratio]{explanations/resnet50_cle4evr_lime_k50_grid.png} \\
+                \textbf{Ablated LIME ($K \approx 4$)} \\
+                \includegraphics[width=\textwidth, height=0.35\textheight, keepaspectratio]{explanations/resnet50_cle4evr_lime_k4_grid.png}
+            \end{center}
+        \end{column}
     \end{columns}
 \end{frame}
 
 \begin{frame}{Post-Hoc Methods on MNMath Dataset}
-    \begin{center}
-        \textbf{ResNet50} \\
-        \includegraphics[width=\textwidth, height=0.22\textheight, keepaspectratio]{explanations/resnet50_mnmath_batch_0_grid.png} \\
-        \textbf{Vision Transformer (ViT)} \\
-        \includegraphics[width=\textwidth, height=0.22\textheight, keepaspectratio]{explanations/vit_mnmath_batch_0_grid.png}
-    \end{center}
+    \begin{columns}
+        \begin{column}{0.48\textwidth}
+            \begin{center}
+                \textbf{ResNet50} \\
+                \includegraphics[width=\textwidth, height=0.45\textheight, keepaspectratio]{explanations/resnet50_mnmath_batch_0_grid.png}
+            \end{center}
+        \end{column}
+        \begin{column}{0.48\textwidth}
+            \begin{center}
+                \textbf{Vision Transformer (ViT)} \\
+                \includegraphics[width=\textwidth, height=0.45\textheight, keepaspectratio]{explanations/vit_mnmath_batch_0_grid.png}
+            \end{center}
+        \end{column}
+    \end{columns}
     \vspace{-0.2cm}
     \begin{itemize}
         \item \textbf{SHAP} heavily outperforms GradCAM on fine-grained stroke detection.
@@ -287,6 +315,7 @@
 \end{frame}
 
 \begin{frame}[allowframebreaks]{References}
+    \nocite{lundberg2017unified,ribeiro2016should,chen2019this,rudin2019stop}
     \bibliographystyle{IEEEtran}
     \bibliography{references}
 \end{frame}
