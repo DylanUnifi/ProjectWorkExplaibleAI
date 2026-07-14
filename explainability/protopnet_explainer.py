@@ -27,4 +27,4 @@ class ProtoPNetExplainer:
         with torch.no_grad():
             heatmaps = self.protopnet.generate_explanation(images, class_idx=target_classes)
             
-        return heatmaps.cpu().numpy()
+        return heatmaps
