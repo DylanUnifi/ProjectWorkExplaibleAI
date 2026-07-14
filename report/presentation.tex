@@ -45,77 +45,75 @@
 \begin{frame}{Mathematical Foundations: XAI Methods}
     \begin{columns}
         \begin{column}{0.48\textwidth}
-            \begin{block}{SHAP (Shapley Values)}
-                \vspace{-0.4cm}
+            \begin{itemize}
+                \item \textbf{SHAP}
                 {\small
                 \begin{equation*}
                 \phi_i = \sum_{S} \frac{|S|! (n - |S| - 1)!}{n!} \Delta v
                 \end{equation*}
                 }
-            \end{block}
-            \begin{block}{LIME (Local Surrogate)}
-                \vspace{-0.4cm}
+                \item \textbf{LIME}
                 {\small
                 \begin{equation*}
                 \xi(x) = \underset{g \in G}{\text{arg\,min}} \,\, \mathcal{L} + \Omega(g)
                 \end{equation*}
                 }
-            \end{block}
+            \end{itemize}
         \end{column}
         \begin{column}{0.48\textwidth}
-            \begin{block}{GradCAM}
-                \vspace{-0.4cm}
+            \begin{itemize}
+                \item \textbf{GradCAM}
                 {\small
                 \begin{equation*}
-                L_{Grad-CAM}^c = ReLU \left( \sum_k \alpha_k^c A^k \right)
+                L_{\text{Grad-CAM}}^c = \text{ReLU} \left( \sum_k \alpha_k^c A^k \right)
                 \end{equation*}
                 }
-            \end{block}
-            \begin{block}{ProtoPNet Similarity}
-                \vspace{-0.4cm}
+                \item \textbf{ProtoPNet}
                 {\small
                 \begin{equation*}
-                sim = \log\left(\frac{d^2 + 1}{d^2 + \epsilon}\right)
+                \text{sim} = \log\left(\frac{d^2 + 1}{d^2 + \epsilon}\right)
                 \end{equation*}
                 }
-            \end{block}
+            \end{itemize}
         \end{column}
     \end{columns}
 \end{frame}
 
 \begin{frame}{Mathematical Foundations: Metrics}
-    \begin{block}{Infidelity}
-        \vspace{-0.4cm}
-        {\small
-        \begin{equation*}
-        INFD = \mathbb{E}_{I} \left[ \left( f(x) - f(x - I) - I^T \Phi(x) \right)^2 \right]
-        \end{equation*}
-        }
-    \end{block}
-    \begin{block}{Complexity (Entropy)}
-        \vspace{-0.4cm}
-        {\small
-        \begin{equation*}
-        C(\Phi) = - \sum_i p_i \ln(p_i)
-        \end{equation*}
-        }
-    \end{block}
-    \begin{block}{Localization (IoU)}
-        \vspace{-0.4cm}
-        {\small
-        \begin{equation*}
-        Loc = \frac{|M \cap B|}{|M \cup B|}
-        \end{equation*}
-        }
-    \end{block}
-    \begin{block}{Rank Agreement (Spearman)}
-        \vspace{-0.4cm}
-        {\small
-        \begin{equation*}
-        \rho = 1 - \frac{6 \sum d_i^2}{n(n^2 - 1)}
-        \end{equation*}
-        }
-    \end{block}
+    \begin{columns}
+        \begin{column}{0.48\textwidth}
+            \begin{itemize}
+                \item \textbf{Infidelity}
+                {\small
+                \begin{equation*}
+                \text{INFD} = \mathbb{E}_{I} \left[ \left( f(x) - f(x - I) - I^T \Phi(x) \right)^2 \right]
+                \end{equation*}
+                }
+                \item \textbf{Complexity (Entropy)}
+                {\small
+                \begin{equation*}
+                C(\Phi) = - \sum_i p_i \ln(p_i)
+                \end{equation*}
+                }
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.48\textwidth}
+            \begin{itemize}
+                \item \textbf{Localization (IoU)}
+                {\small
+                \begin{equation*}
+                \text{Loc} = \frac{|M \cap B|}{|M \cup B|}
+                \end{equation*}
+                }
+                \item \textbf{Rank Agreement (Spearman)}
+                {\small
+                \begin{equation*}
+                \rho = 1 - \frac{6 \sum d_i^2}{n(n^2 - 1)}
+                \end{equation*}
+                }
+            \end{itemize}
+        \end{column}
+    \end{columns}
 \end{frame}
 
 \begin{frame}{Experimental Setup \& Metrics}
@@ -166,37 +164,22 @@
 
 
 \begin{frame}{LIME Ablation Study on CLE4EVR}
+    \begin{itemize}
+        \item \textbf{Hypothesis}: Does matching LIME's superpixels ($K$) to the number of objects improve explanations?
+        \item \textbf{Result}: Object-aligned boundaries ($K=4$) unexpectedly double the \textit{Infidelity} compared to default ($K=50$). Linear surrogates fail to capture the non-linear reasoning of CNNs.
+    \end{itemize}
+    \vspace{0.3cm}
     \begin{columns}
-        \begin{column}{0.5\textwidth}
-            \textbf{Hypothesis}: Does matching LIME's superpixel count to the number of objects improve explanations?
-            \vspace{0.2cm}
-            \begin{itemize}
-                \item \textbf{Default ($K=50$)}: Fragments smooth 3D shapes.
-                \item \textbf{Matched ($K \approx 4$)}: Visually aligns with boundaries, but \textit{Infidelity doubles} (from 16.0 to 34.2).
-            \end{itemize}
-            \vspace{0.2cm}
-            \textbf{Conclusion}: Linear surrogates fail to capture the non-linear reasoning of CNNs.
-            \vspace{0.2cm}
-            \begin{table}
-            \resizebox{\textwidth}{!}{
-            \begin{tabular}{|c|c|c|}
-            \hline
-            \textbf{Superpixels ($K$)} & \textbf{Alignment} & \textbf{Infidelity $\downarrow$} \\
-            \hline
-            Default (50) & Fragmented & 16.010 \\
-            Match (4) & Object-Aligned & 34.250 \\
-            Dense (100) & Highly Fragmented & 12.100 \\
-            \hline
-            \end{tabular}
-            }
-            \end{table}
-        \end{column}
-        \begin{column}{0.5\textwidth}
+        \begin{column}{0.48\textwidth}
             \begin{center}
                 \textbf{Default LIME ($K=50$)} \\
-                \includegraphics[width=\textwidth, height=0.35\textheight, keepaspectratio]{explanations/resnet50_cle4evr_lime_k50_grid.png} \\
+                \includegraphics[width=\textwidth, height=0.45\textheight, keepaspectratio]{explanations/resnet50_cle4evr_lime_k50_grid.png}
+            \end{center}
+        \end{column}
+        \begin{column}{0.48\textwidth}
+            \begin{center}
                 \textbf{Ablated LIME ($K \approx 4$)} \\
-                \includegraphics[width=\textwidth, height=0.35\textheight, keepaspectratio]{explanations/resnet50_cle4evr_lime_k4_grid.png}
+                \includegraphics[width=\textwidth, height=0.45\textheight, keepaspectratio]{explanations/resnet50_cle4evr_lime_k4_grid.png}
             \end{center}
         \end{column}
     \end{columns}
