@@ -83,6 +83,11 @@ To ensure a fair and rigorous comparison, we implemented a custom XAI metric sui
 
 \subsection{Post-Hoc Methods on Classical Backbones}
 When evaluating ResNet50 and ViT, the post-hoc methods exhibited strong dependency on the dataset characteristics:
+\begin{figure*}[htbp]
+\centerline{\includegraphics[width=\textwidth]{explanations/resnet50_cle4evr_batch_0_grid.png}}
+\caption{Visual comparison of SHAP, LIME, and GradCAM on CLE4EVR using ResNet50.}
+\label{fig:resnet_grid}
+\end{figure*}
 \begin{itemize}
     \item \textbf{MNMath (Fine-grained)}: SHAP significantly outperformed GradCAM. GradCAM's low spatial resolution (e.g., $7 \times 7$ feature maps) caused its heatmaps to blur over the fine strokes of the digits, resulting in poor localization.
     \item \textbf{CLE4EVR (Large Objects)}: GradCAM rebounded, performing on par with SHAP. The large 3D objects perfectly matched the scale of GradCAM's receptive field. LIME severely underperformed due to its default SLIC superpixel segmentation, which fragmented the smooth 3D objects.
