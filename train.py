@@ -6,7 +6,7 @@ from tqdm import tqdm
 import wandb
 
 # Imports from merged files
-from dataset import get_cle4evr_loaders, get_clevr_hans_loaders, get_mnmath_loaders
+from dataset import get_cle4evr_loaders, get_mnmath_loaders
 from model import ResNet50Classifier, ViTClassifier, ProtoPNet, train_protopnet, HybridQCNNClassifier, HybridQViT
 
 def parse_args():

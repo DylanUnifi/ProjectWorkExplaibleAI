@@ -93,10 +93,10 @@ class ResNet50Classifier(nn.Module):
         self.backbone.layer4.register_forward_hook(self._save_activation)
         self.backbone.layer4.register_full_backward_hook(self._save_gradient)
     
-    def _save_activation(self, module, input, output):
+    def _save_activation(self, module, _input, output):
         self.activations['layer4'] = output
     
-    def _save_gradient(self, module, grad_input, grad_output):
+    def _save_gradient(self, module, _grad_input, grad_output):
         self.gradients['layer4'] = grad_output[0]
     
     def forward(self, x, return_features=False):
@@ -245,7 +245,7 @@ class ViTClassifier(nn.Module):
                 return logits, outputs.attentions
             return logits
     
-    def visualize_attention(self, attention_weights, image_size=224, patch_size=16):
+    def visualize_attention(self, attention_weights, image_size=224, _patch_size=16):
         """
         Visualize attention maps from ViT.
         
@@ -278,7 +278,7 @@ class ViTClassifier(nn.Module):
         
         return attention_map
     
-    def attention_rollout(self, attention_weights, discard_ratio=0.9):
+    def attention_rollout(self, attention_weights, _discard_ratio=0.9):
         """
         Attention Rollout (Abnar & Zuidema, 2020).
         Aggregate attention across all layers.
@@ -620,7 +620,6 @@ class ProtoPNet(nn.Module):
         """
         Visualize learned prototypes by finding their nearest patches.
         """
-        import os
         import matplotlib.pyplot as plt
         from pathlib import Path
         
@@ -1154,7 +1153,7 @@ class HybridQViT(nn.Module):
     Uses a pre-trained ViT for feature extraction and a Quantum Circuit as the classification head.
     Resizes input to 224x224 to match ViT requirements.
     """
-    def __init__(self, n_classes=3, input_channel=3, n_qubits=8, img_size=224, patch_size=16, embed_dim=768, backend="default.qubit", num_equations=1, num_concepts=0, **kwargs):
+    def __init__(self, n_classes=3, input_channel=3, n_qubits=8, _img_size=224, _patch_size=16, embed_dim=768, backend="default.qubit", num_equations=1, num_concepts=0, **kwargs):
         super().__init__()
         self.n_classes = n_classes
         self.num_equations = num_equations

@@ -96,8 +96,7 @@ class LIMEExplainer:
     
     def visualize(self, image, explanation, save_path=None):
         """Visualize LIME explanation."""
-        unnorm_image = (image.cpu() * self.std.cpu() + self.mean.cpu())
-        img_np = (unnorm_image.permute(1, 2, 0).detach().numpy() * 255).clip(0, 255).astype(np.uint8)
+
         
         temp, mask = explanation.get_image_and_mask(
             explanation.top_labels[0],

@@ -7,7 +7,6 @@ Advanced visualization for comparative XAI study.
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
-import torch
 from matplotlib.gridspec import GridSpec
 
 def plot_comparison_grid(image, explanations_dict, save_path, ground_truth=None):

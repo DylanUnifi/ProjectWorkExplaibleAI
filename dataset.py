@@ -1,11 +1,8 @@
 # data_loader/utils.py
-from torchvision import datasets, transforms
+from torchvision import transforms
 from torch.utils.data import Subset
 import torch
-from torchvision.datasets import SVHN
 import numpy as np
-from sklearn.decomposition import PCA
-
 
 def build_transform(grayscale: bool = True, augment: bool = False):
     """Standardized transformation pipeline."""
@@ -40,125 +37,6 @@ def relabel_subset(subset: Subset, targets, binary_classes):
     return subset
 
 
-def load_dataset_by_name(name, binary_classes=None, grayscale=True, root='./data'):
-    """
-    Load (train_dataset, test_dataset) filtered on `binary_classes` and binary labels {0,1}.
-    - fashion_mnist : Subset of torchvision.FashionMNIST
-    - cifar10       : Subset of torchvision.CIFAR10
-    - svhn          : TensorDataset (X, y) with y in int64 (torch.long)
-    """
-    if binary_classes is None:
-        binary_classes = [3, 8]
-
-    name = str(name).lower()
-
-    if name == 'fashion_mnist':
-        transform = build_transform(grayscale=True)
-        train_set = datasets.FashionMNIST(root=root, train=True, download=True, transform=transform)
-        test_set  = datasets.FashionMNIST(root=root, train=False, download=True, transform=transform)
-
-        train_idx = [i for i, t in enumerate(train_set.targets) if int(t) in binary_classes]
-        test_idx  = [i for i, t in enumerate(test_set.targets)  if int(t) in binary_classes]
-
-        train_subset = relabel_subset(Subset(train_set, train_idx), train_set.targets, binary_classes)
-        test_subset  = relabel_subset(Subset(test_set,  test_idx),  test_set.targets,  binary_classes)
-        return train_subset, test_subset
-
-    elif name == 'cifar10':
-        transform = build_transform(grayscale=grayscale, augment=True)
-        train_set = datasets.CIFAR10(root=root, train=True,  download=True, transform=transform)
-        test_set  = datasets.CIFAR10(root=root, train=False, download=True, transform=transform)
-
-        train_idx = [i for i, t in enumerate(train_set.targets) if int(t) in binary_classes]
-        test_idx  = [i for i, t in enumerate(test_set.targets)  if int(t) in binary_classes]
-
-        train_subset = relabel_subset(Subset(train_set, train_idx), train_set.targets, binary_classes)
-        test_subset  = relabel_subset(Subset(test_set,  test_idx),  test_set.targets,  binary_classes)
-        return train_subset, test_subset
-
-    elif name == 'svhn':
-        # SVHN returns labels in {0..9}, here we filter, and return y in torch.long
-        transform = build_transform(grayscale=grayscale, augment=False)
-        train_set = SVHN(root=root, split='train', download=True, transform=transform)
-        test_set  = SVHN(root=root, split='test',  download=True, transform=transform)
-
-        def filter_and_process(dataset):
-            X, y = [], []
-            for idx in range(len(dataset)):
-                img, label = dataset[idx]
-                label = int(label)
-                if label in binary_classes:
-                    X.append(img)
-                    y.append(1 if label == int(binary_classes[1]) else 0)
-            X = torch.stack(X) if len(X) else torch.empty(0)
-            y = torch.tensor(y, dtype=torch.long)  # int64 for sklearn
-            return torch.utils.data.TensorDataset(X, y)
-
-        train_dataset = filter_and_process(train_set)
-        test_dataset  = filter_and_process(test_set)
-        return train_dataset, test_dataset
-
-    else:
-        raise ValueError(f"Dataset inconnu: {name}")
-
-
-def extract_features_pca(dataloader, n_components, pca_model=None, desc="Extracting features"):
-    """
-    Extract flattened image features from a dataloader and apply PCA.
-
-    Uses IncrementalPCA when fitting so that the full n_samples_x_n_features matrix
-    (e.g. 9000x150528 ≈ 5 GB) is never materialised in RAM.  Two tqdm passes are
-    shown: one for fitting, one for the final transform.
-
-    Supports both:
-    - dict batches with keys "image" and "label" (CLEVR-Hans loaders)
-    - tuple/list batches of (images, labels)
-    """
-    from tqdm import tqdm
-    from sklearn.decomposition import IncrementalPCA
-
-    def _unpack(batch):
-        if isinstance(batch, dict):
-            return batch["image"], batch["label"]
-        elif isinstance(batch, (tuple, list)) and len(batch) >= 2:
-            return batch[0], batch[1]
-        raise ValueError("Unsupported batch format in extract_features_pca")
-
-    needs_fit = (pca_model is None)
-
-    # ── Pass 1: incremental PCA fit (train only) ─────────────────
-    if needs_fit:
-        pca_model = IncrementalPCA(n_components=n_components)
-        # Accumulate small batches so partial_fit always sees >= n_components samples
-        min_chunk = max(n_components * 4, 128)
-        buffer = []
-        buf_size = 0
-        print(f"   Fitting IncrementalPCA ({n_components} components, chunk≥{min_chunk})...", flush=True)
-        for batch in tqdm(dataloader, desc=f"{desc} [fit]", unit="batch"):
-            images, _ = _unpack(batch)
-            bf = images.view(images.size(0), -1).detach().cpu().numpy().astype(np.float32)
-            buffer.append(bf)
-            buf_size += len(bf)
-            if buf_size >= min_chunk:
-                pca_model.partial_fit(np.concatenate(buffer, axis=0))
-                buffer, buf_size = [], 0
-        if buf_size >= n_components:
-            pca_model.partial_fit(np.concatenate(buffer, axis=0))
-        var = pca_model.explained_variance_ratio_.sum() * 100
-        print(f"   PCA fitted — variance explained: {var:.1f}%", flush=True)
-
-    # ── Pass 2: transform (all splits) ───────────────────────────
-    features, labels = [], []
-    transform_desc = f"{desc} [transform]" if needs_fit else desc
-    for batch in tqdm(dataloader, desc=transform_desc, unit="batch"):
-        images, batch_labels = _unpack(batch)
-        bf = images.view(images.size(0), -1).detach().cpu().numpy().astype(np.float32)
-        features.append(pca_model.transform(bf))
-        labels.append(batch_labels.detach().cpu().numpy())
-
-    X_reduced = np.concatenate(features, axis=0)
-    y = np.concatenate(labels, axis=0)
-    return X_reduced.astype(np.float32, copy=False), y, pca_model
 
 
 # data_loader/clevr_hans_loader.py

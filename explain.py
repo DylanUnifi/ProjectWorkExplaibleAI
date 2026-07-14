@@ -5,7 +5,7 @@ import torch.nn as nn
 from tqdm import tqdm
 import wandb
 
-from dataset import get_cle4evr_loaders, get_clevr_hans_loaders, get_mnmath_loaders
+from dataset import get_cle4evr_loaders, get_mnmath_loaders
 from model import ResNet50Classifier, ViTClassifier, ProtoPNet, HybridQCNNClassifier, HybridQViT
 from explainability.shap_explainer import SHAPExplainer
 from explainability.lime_explainer import LIMEExplainer

@@ -3,7 +3,7 @@
 import torch
 import torch.nn.functional as F
 import numpy as np
-from tqdm import tqdm
+
 from scipy.stats import spearmanr
 
 class XAIMetrics:
@@ -109,7 +109,7 @@ class XAIMetrics:
             if isinstance(orig_output, tuple):
                 orig_output = orig_output[0]
             
-            orig_prob = F.softmax(orig_output, dim=1)[range(len(target)), target]
+
         
         # Flatten spatial dimensions
         B = x.shape[0]
@@ -167,7 +167,7 @@ class XAIMetrics:
             if isinstance(orig_output, tuple):
                 orig_output = orig_output[0]
             
-            orig_prob = F.softmax(orig_output, dim=1)[range(len(target)), target]
+
         
         # Flatten
         B = x.shape[0]
