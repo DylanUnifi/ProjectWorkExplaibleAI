@@ -38,15 +38,23 @@
             \textbf{The "Black Box" Problem}
             \begin{itemize}
                 \item Deep learning models (CNNs, ViTs) have opaque decision-making processes.
-                \item \textbf{Post-Hoc XAI}: Explainers applied \textit{after} training (SHAP, LIME).
-                \item \textbf{Intrinsic XAI}: Models interpretable by design (ProtoPNet).
+                \item \textbf{Post-Hoc XAI}: Explainers applied \textit{after} training.
+                \item \textbf{Intrinsic XAI}: Models interpretable by design.
             \end{itemize}
         \end{column}
         \begin{column}{0.5\textwidth}
-            \begin{center}
-                % Placeholder pour une image de concept XAI
-                \includegraphics[width=0.9\textwidth, height=0.6\textheight, keepaspectratio]{explanations/resnet50_cle4evr_metrics_comparison.png}
-            \end{center}
+            \begin{block}{ProtoPNet Similarity}
+                \vspace{-0.4cm}
+                \begin{equation*}
+                sim(\mathbf{z}, \mathbf{p}_j) = \log\left(\frac{d^2(\mathbf{z}, \mathbf{p}_j) + 1}{d^2(\mathbf{z}, \mathbf{p}_j) + \epsilon}\right)
+                \end{equation*}
+            \end{block}
+            \begin{block}{SHAP (Shapley Values)}
+                \vspace{-0.4cm}
+                \begin{equation*}
+                \phi_i(v) = \sum_{S \subseteq N \setminus \{i\}} \frac{|S|! (n - |S| - 1)!}{n!} [v(S \cup \{i\}) - v(S)]
+                \end{equation*}
+            \end{block}
         \end{column}
     \end{columns}
 \end{frame}
@@ -69,8 +77,11 @@
         \end{column}
         \begin{column}{0.6\textwidth}
             \begin{center}
-                % Remplacer par l'image des graphiques de métriques
-                \includegraphics[width=\textwidth, height=0.7\textheight, keepaspectratio]{explanations/protopnet_cle4evr_metrics_comparison.png}
+                \textbf{Post-Hoc Metrics} \\
+                \includegraphics[width=0.8\textwidth, height=0.35\textheight, keepaspectratio]{explanations/resnet50_cle4evr_metrics_comparison.png} \\
+                \vspace{0.1cm}
+                \textbf{Intrinsic Metrics} \\
+                \includegraphics[width=0.8\textwidth, height=0.35\textheight, keepaspectratio]{explanations/protopnet_cle4evr_metrics_comparison.png}
             \end{center}
         \end{column}
     \end{columns}
