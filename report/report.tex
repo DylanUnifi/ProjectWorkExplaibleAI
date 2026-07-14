@@ -14,6 +14,8 @@
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 
+\raggedbottom
+
 \begin{document}
 
 \title{Project Work Explainable AI:\\
@@ -177,7 +179,7 @@ The most significant finding of this study emerged when evaluating ProtoPNet. We
 \label{fig:protopnet_grids}
 \end{figure*}
 
-As shown by the negative rank correlation (\textbf{$-0.09$} on CLE4EVR, \textbf{$-0.24$} on MNMath) in Fig. \ref{fig:heatmap}, SHAP and the internal reasoning of ProtoPNet are in complete disagreement. 
+As shown by the negative rank correlation (\textbf{$-0.09$} on CLE4EVR, \textbf{$-0.24$} on MNMath) in Fig. \ref{fig:heatmaps}, SHAP and the internal reasoning of ProtoPNet are in complete disagreement. 
 \begin{itemize}
     \item \textbf{SHAP} highlights fine edges and bright pixels, producing a highly sparse explanation (\textbf{Complexity: 0.001}).
     \item \textbf{ProtoPNet Internal} highlights broad, diffuse spatial regions, including the objects and their surrounding context (\textbf{Complexity: 0.52}, see Fig. \ref{fig:protopnet_grids}).
