@@ -33,21 +33,13 @@
 \end{frame}
 
 \begin{frame}{Context and Motivation}
-    \begin{columns}
-        \begin{column}{0.5\textwidth}
-            \textbf{The "Black Box" Problem}
-            \begin{itemize}
-                \item Deep learning models (CNNs, ViTs) have opaque decision-making processes.
-                \item \textbf{Post-Hoc XAI}: Explainers applied \textit{after} training (e.g., \textbf{SHAP}, \textbf{LIME}).
-                \item \textbf{Intrinsic XAI}: Models interpretable by design (e.g., \textbf{ProtoPNet}).
-            \end{itemize}
-        \end{column}
-        \begin{column}{0.5\textwidth}
-            \begin{center}
-                \includegraphics[width=0.9\textwidth, height=0.6\textheight, keepaspectratio]{explanations/resnet50_cle4evr_batch_0.png}
-            \end{center}
-        \end{column}
-    \end{columns}
+    \textbf{The "Black Box" Problem}
+    \vspace{0.2cm}
+    \begin{itemize}
+        \item Deep learning models (CNNs, ViTs) have opaque decision-making processes.
+        \item \textbf{Post-Hoc XAI}: Explainers applied \textit{after} training (e.g., \textbf{SHAP}, \textbf{LIME}).
+        \item \textbf{Intrinsic XAI}: Models interpretable by design (e.g., \textbf{ProtoPNet}).
+    \end{itemize}
     \vspace{0.4cm}
     {\tiny \textit{References: Lundberg \& Lee (SHAP), NeurIPS 2017 \quad | \quad Ribeiro et al. (LIME), KDD 2016 \quad | \quad Chen et al. (ProtoPNet), NeurIPS 2019}}
 \end{frame}
@@ -122,21 +114,14 @@
 \end{frame}
 
 \begin{frame}{Post-Hoc Methods on CLE4EVR Dataset}
-    \begin{columns}
-        \begin{column}{0.5\textwidth}
-            \begin{center}
-                \textbf{ResNet50} \\
-                \includegraphics[width=\textwidth]{explanations/resnet50_cle4evr_batch_0_grid.png}
-            \end{center}
-        \end{column}
-        \begin{column}{0.5\textwidth}
-            \begin{center}
-                \textbf{Vision Transformer (ViT)} \\
-                \includegraphics[width=\textwidth]{explanations/vit_cle4evr_batch_0_grid.png}
-            \end{center}
-        \end{column}
-    \end{columns}
-    \vspace{0.2cm}
+    \begin{center}
+        \textbf{ResNet50} \\
+        \includegraphics[width=0.8\textwidth, height=0.32\textheight, keepaspectratio]{explanations/resnet50_cle4evr_batch_0_grid.png} \\
+        \vspace{0.1cm}
+        \textbf{Vision Transformer (ViT)} \\
+        \includegraphics[width=0.8\textwidth, height=0.32\textheight, keepaspectratio]{explanations/vit_cle4evr_batch_0_grid.png}
+    \end{center}
+    \vspace{0.1cm}
     \begin{itemize}
         \item \textbf{GradCAM} performs well: large 3D objects match its coarse receptive field.
         \item \textbf{LIME} underperforms: default SLIC superpixels severely fragment the smooth 3D shapes.
@@ -175,21 +160,14 @@
 \end{frame}
 
 \begin{frame}{Post-Hoc Methods on MNMath Dataset}
-    \begin{columns}
-        \begin{column}{0.5\textwidth}
-            \begin{center}
-                \textbf{ResNet50} \\
-                \includegraphics[width=\textwidth]{explanations/resnet50_mnmath_batch_0_grid.png}
-            \end{center}
-        \end{column}
-        \begin{column}{0.5\textwidth}
-            \begin{center}
-                \textbf{Vision Transformer (ViT)} \\
-                \includegraphics[width=\textwidth]{explanations/vit_mnmath_batch_0_grid.png}
-            \end{center}
-        \end{column}
-    \end{columns}
-    \vspace{0.2cm}
+    \begin{center}
+        \textbf{ResNet50} \\
+        \includegraphics[width=0.8\textwidth, height=0.32\textheight, keepaspectratio]{explanations/resnet50_mnmath_batch_0_grid.png} \\
+        \vspace{0.1cm}
+        \textbf{Vision Transformer (ViT)} \\
+        \includegraphics[width=0.8\textwidth, height=0.32\textheight, keepaspectratio]{explanations/vit_mnmath_batch_0_grid.png}
+    \end{center}
+    \vspace{0.1cm}
     \begin{itemize}
         \item \textbf{SHAP} heavily outperforms GradCAM on fine-grained stroke detection.
         \item \textbf{GradCAM} fails: low resolution feature maps blur over the thin mathematical digits.
@@ -218,23 +196,20 @@
 
 \begin{frame}{Rank Agreement: Total Disagreement}
     \begin{columns}
-        \begin{column}{0.4\textwidth}
+        \begin{column}{0.5\textwidth}
             \begin{itemize}
                 \item Rank correlation is \textbf{negative} (-0.09 for CLE4EVR, -0.24 for MNMath).
                 \item Post-hoc methods provide edge-aligned explanations...
                 \item ...but they misrepresent the actual broad spatial reasoning of the network!
             \end{itemize}
         \end{column}
-        \begin{column}{0.3\textwidth}
+        \begin{column}{0.5\textwidth}
             \begin{center}
                 \textbf{CLE4EVR} \\
-                \includegraphics[width=\textwidth]{explanations/protopnet_cle4evr_agreement_heatmap.png}
-            \end{center}
-        \end{column}
-        \begin{column}{0.3\textwidth}
-            \begin{center}
+                \includegraphics[width=0.7\textwidth, height=0.4\textheight, keepaspectratio]{explanations/protopnet_cle4evr_agreement_heatmap.png} \\
+                \vspace{0.1cm}
                 \textbf{MNMath} \\
-                \includegraphics[width=\textwidth]{explanations/protopnet_mnmath_agreement_heatmap.png}
+                \includegraphics[width=0.7\textwidth, height=0.4\textheight, keepaspectratio]{explanations/protopnet_mnmath_agreement_heatmap.png}
             \end{center}
         \end{column}
     \end{columns}
