@@ -11,13 +11,14 @@ class LIMEExplainer:
     LIME (Local Interpretable Model-agnostic Explanations) for images.
     """
     
-    def __init__(self, model, n_classes, mean=[0.5], std=[0.5]):
+    def __init__(self, model, n_classes, mean=[0.5], std=[0.5], n_segments=200):
         self.model = model
         self.mean = torch.tensor(mean).view(-1, 1, 1)
         self.std = torch.tensor(std).view(-1, 1, 1)
         self.model.eval()
         self.device = next(model.parameters()).device
         self.n_classes = n_classes
+        self.n_segments = n_segments
         
         # Create LIME explainer
         self.explainer = lime_image.LimeImageExplainer()
@@ -65,11 +66,11 @@ class LIMEExplainer:
             unnorm_image = (image.cpu() * self.std.cpu() + self.mean.cpu())
             img_np = (unnorm_image.permute(1, 2, 0).detach().numpy() * 255).clip(0, 255).astype(np.uint8)
             
-            # Force tiny superpixels for all datasets using SLIC
+            # Custom segmentation using self.n_segments
             def custom_segmentation(img):
-                # n_segments=200 creates very small superpixels
-                # compactness controls shape regularity
-                return slic(img, n_segments=200, compactness=10, start_label=0)
+                # compactness controls shape regularity (lower = more irregular)
+                compactness = 10 if self.n_segments == 200 else 1
+                return slic(img, n_segments=self.n_segments, compactness=compactness, start_label=0)
             segmentation_fn = custom_segmentation
                 
             # Explain

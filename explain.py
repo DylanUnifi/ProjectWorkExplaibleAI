@@ -23,6 +23,7 @@ def parse_args():
     parser.add_argument("--batch_size", type=int, default=16)
     parser.add_argument("--max_samples", type=int, default=128, help="Number of samples to explain")
     parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu")
+    parser.add_argument("--lime_ablation", action="store_true", help="Use dynamic superpixel sizes for LIME to match object size")
     return parser.parse_args()
 
 class ModelWrapper(nn.Module):
@@ -79,12 +80,14 @@ def main():
         in_channels = 3
         mean = [0.485, 0.456, 0.406]
         std = [0.229, 0.224, 0.225]
+        target_lime_segments = 15  # CLEVR has around 3-10 large objects
     else:
         train_loader, _, test_loader, num_equations, num_concepts = get_mnmath_loaders(batch_size=args.batch_size, max_samples=args.max_samples)
         n_classes = 19
         in_channels = 1
         mean = [0.5]
         std = [0.5]
+        target_lime_segments = 4   # MNMath has 4 digits
 
     model = load_model(args, n_classes, in_channels, num_equations, num_concepts)
 
@@ -96,9 +99,13 @@ def main():
     wrapped_model = ModelWrapper(model)
     metrics_calc = XAIMetrics(wrapped_model, args.device)
     
+    lime_n_segments = target_lime_segments if args.lime_ablation else 200
+    if args.lime_ablation:
+        print(f"*** LIME Ablation Mode: Using {lime_n_segments} segments to match object size ***")
+        
     explainers = {
         "SHAP": SHAPExplainer(wrapped_model, train_loader, method="gradient"),
-        "LIME": LIMEExplainer(wrapped_model, n_classes=n_classes, mean=mean, std=std)
+        "LIME": LIMEExplainer(wrapped_model, n_classes=n_classes, mean=mean, std=std, n_segments=lime_n_segments)
     }
     
     # Dynamically add architecture-specific explainers
