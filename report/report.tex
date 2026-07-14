@@ -77,7 +77,10 @@ The comparative pipeline evaluates three post-hoc methods:
     \begin{equation}
     \xi(x) = \underset{g \in G}{\text{arg\,min}} \,\, \mathcal{L}(f, g, \pi_x) + \Omega(g)
     \end{equation}
-    \item \textbf{GradCAM}: Uses the gradients of the target concept flowing into the final convolutional layer.
+    \item \textbf{GradCAM}: Uses the gradients of the target concept $y^c$ flowing into the final convolutional layer feature maps $A^k$. The neuron importance weights $\alpha_k^c$ and the final heatmap $L_{Grad-CAM}^c$ are computed as:
+    \begin{equation}
+    \alpha_k^c = \frac{1}{Z} \sum_i \sum_j \frac{\partial y^c}{\partial A_{ij}^k}, \quad L_{Grad-CAM}^c = ReLU \left( \sum_k \alpha_k^c A^k \right)
+    \end{equation}
 \end{itemize}
 For ProtoPNet, we extract its \textbf{Internal Spatial Heatmap}. The similarity $sim(\mathbf{z}, \mathbf{p}_j)$ between a latent convolutional patch $\mathbf{z}$ and a learned prototype $\mathbf{p}_j$ is computed via inverted $L^2$ distance:
 \begin{equation}
@@ -88,10 +91,22 @@ By upsampling these similarity scores and weighting them by the final classifica
 \section{Evaluation Metrics}
 To ensure a fair and rigorous comparison, we implemented a custom XAI metric suite based on foundational explanation validation techniques \cite{yeh2019fidelity}:
 \begin{itemize}
-    \item \textbf{Infidelity}: Measures how the model's prediction changes when important pixels (according to the explanation) are perturbed. Lower is better.
-    \item \textbf{Complexity}: The fraction of pixels deemed "important" (above a threshold). Lower complexity implies a sparser, more concise explanation.
-    \item \textbf{Localization Accuracy}: Evaluated via Average Precision (AP) against ground-truth object masks. Higher is better.
-    \item \textbf{Rank Agreement (Spearman)}: Measures the correlation between the rankings of pixel importance given by two different methods.
+    \item \textbf{Infidelity}: Measures how the model's prediction changes when important pixels (according to explanation $\Phi$) are perturbed by a noise vector $I$. Lower is better.
+    \begin{equation}
+    INFD = \mathbb{E}_{I} \left[ \left( f(x) - f(x - I) - I^T \Phi(x) \right)^2 \right]
+    \end{equation}
+    \item \textbf{Complexity}: Measures the sparsity of the explanation using Shannon entropy of the normalized attribution magnitudes $p_i = |\Phi_i| / \sum |\Phi_j|$. Lower is better.
+    \begin{equation}
+    C(\Phi) = - \sum_i p_i \ln(p_i)
+    \end{equation}
+    \item \textbf{Localization Accuracy}: Evaluated via Intersection over Union (IoU) between the thresholded explanation mask $M$ and the ground-truth object bounding box $B$. Higher is better.
+    \begin{equation}
+    Loc = \frac{|M \cap B|}{|M \cup B|}
+    \end{equation}
+    \item \textbf{Rank Agreement (Spearman)}: Measures the correlation between the rankings of pixel importance given by two different methods, where $d_i$ is the difference in ranks.
+    \begin{equation}
+    \rho = 1 - \frac{6 \sum d_i^2}{n(n^2 - 1)}
+    \end{equation}
 \end{itemize}
 
 \section{Experimental Results}
