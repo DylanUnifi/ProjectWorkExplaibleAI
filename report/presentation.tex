@@ -76,43 +76,65 @@
     \end{columns}
 \end{frame}
 
-\begin{frame}{Results: Post-Hoc on Classical Backbones}
+\begin{frame}{Post-Hoc Methods on CLE4EVR Dataset}
     \begin{columns}
         \begin{column}{0.5\textwidth}
             \begin{center}
-                \textbf{ResNet50 on CLE4EVR} \\
+                \textbf{ResNet50} \\
                 \includegraphics[width=\textwidth]{explanations/resnet50_cle4evr_batch_0_grid.png}
             \end{center}
         \end{column}
         \begin{column}{0.5\textwidth}
             \begin{center}
-                \textbf{ViT on MNMath} \\
+                \textbf{Vision Transformer (ViT)} \\
+                \includegraphics[width=\textwidth]{explanations/vit_cle4evr_batch_0_grid.png}
+            \end{center}
+        \end{column}
+    \end{columns}
+    \vspace{0.2cm}
+    \begin{itemize}
+        \item \textbf{GradCAM} performs well: large 3D objects match its coarse receptive field.
+        \item \textbf{LIME} underperforms: default SLIC superpixels severely fragment the smooth 3D shapes.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Post-Hoc Methods on MNMath Dataset}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \begin{center}
+                \textbf{ResNet50} \\
+                \includegraphics[width=\textwidth]{explanations/resnet50_mnmath_batch_0_grid.png}
+            \end{center}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{center}
+                \textbf{Vision Transformer (ViT)} \\
                 \includegraphics[width=\textwidth]{explanations/vit_mnmath_batch_0_grid.png}
             \end{center}
         \end{column}
     \end{columns}
     \vspace{0.2cm}
     \begin{itemize}
-        \item \textbf{GradCAM} excels on large 3D objects but fails on fine strokes.
-        \item \textbf{LIME} struggles with default superpixels on large objects (fragmentation).
+        \item \textbf{SHAP} heavily outperforms GradCAM on fine-grained stroke detection.
+        \item \textbf{GradCAM} fails: low resolution feature maps blur over the thin mathematical digits.
     \end{itemize}
 \end{frame}
 
-\begin{frame}{The Clash of Paradigms: ProtoPNet vs Post-Hoc}
+\begin{frame}{Intrinsic vs Post-Hoc: CLE4EVR}
     \begin{center}
         \textbf{Visual Comparison on CLE4EVR} \\
         \vspace{0.2cm}
-        \includegraphics[width=\textwidth, height=0.65\textheight, keepaspectratio]{explanations/protopnet_cle4evr_batch_0_grid.png}
+        \includegraphics[width=\textwidth, height=0.6\textheight, keepaspectratio]{explanations/protopnet_cle4evr_batch_0_grid.png}
     \end{center}
     \vspace{-0.2cm}
-    \small{\textbf{SHAP} highlights fine edges (sparse). \textbf{ProtoPNet Internal} highlights broad, context-aware regions.}
+    \small{\textbf{SHAP} isolates edges (sparse), while \textbf{ProtoPNet Internal} highlights broad, context-aware regions.}
 \end{frame}
 
-\begin{frame}{The Clash of Paradigms: Fine-grained (MNMath)}
+\begin{frame}{Intrinsic vs Post-Hoc: MNMath}
     \begin{center}
         \textbf{Visual Comparison on MNMath} \\
         \vspace{0.2cm}
-        \includegraphics[width=\textwidth, height=0.65\textheight, keepaspectratio]{explanations/protopnet_mnmath_batch_0_grid.png}
+        \includegraphics[width=\textwidth, height=0.6\textheight, keepaspectratio]{explanations/protopnet_mnmath_batch_0_grid.png}
     \end{center}
     \vspace{-0.2cm}
     \small{\textbf{ProtoPNet} reasoning encompasses the whole digit and its context, completely ignoring the strict "stroke" pixels favored by SHAP.}
