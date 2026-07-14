@@ -704,6 +704,68 @@ class ProtoPNet(nn.Module):
                 print("Prototypes successfully logged to W&B!")
         except ImportError:
             pass
+            
+    def generate_explanation(self, x, class_idx=None):
+        """
+        Generate spatial attribution map from prototypes for the predicted class.
+        Returns: (B, H, W) heatmap upsampled to image size.
+        """
+        self.eval()
+        B, C, H_img, W_img = x.shape
+        
+        # 1. Extract features
+        features = self.features(x)  # (B, 512, H', W')
+        features = self.projection(features)  # (B, prototype_dim, H', W')
+        
+        B, C_proj, H_feat, W_feat = features.shape
+        features_flat = features.view(B, C_proj, H_feat * W_feat)
+        
+        prototypes_flat = self.prototypes.view(self.n_prototypes, C_proj)
+        
+        features_expanded = features_flat.unsqueeze(1)  # (B, 1, C, HxW)
+        prototypes_expanded = prototypes_flat.unsqueeze(0).unsqueeze(3)  # (1, n_prototypes, C, 1)
+        
+        # Squared L2 distance
+        distances_sq = torch.sum((features_expanded - prototypes_expanded) ** 2, dim=2)  # (B, n_prototypes, HxW)
+        distances_spatial = distances_sq.view(B, self.n_prototypes, H_feat, W_feat)
+        
+        # Similarities
+        similarities_spatial = torch.log((distances_spatial + 1) / (distances_spatial + self.epsilon))
+        
+        # For each image in batch, we want the heatmap for its predicted class
+        # If class_idx is None, we use the model's prediction
+        if class_idx is None:
+            min_distances, _ = torch.min(distances_sq, dim=2)
+            similarities = torch.log((min_distances + 1) / (min_distances + self.epsilon))
+            logits = self.last_layer(similarities)
+            if self.num_equations > 1:
+                logits = logits.view(B, self.num_equations, self.n_classes)
+                logits = logits[:, 0, :]
+            preds = logits.argmax(dim=-1)
+        else:
+            preds = class_idx
+            
+        heatmaps = torch.zeros((B, H_feat, W_feat), device=x.device)
+        for b in range(B):
+            pred_class = preds[b].item() if isinstance(preds, torch.Tensor) else preds
+            # Get weights for this class for equation 0
+            weights = self.last_layer.weight[pred_class, :]  # (n_prototypes,)
+            
+            # Weighted sum over prototypes
+            weighted_sim = similarities_spatial[b] * weights.view(-1, 1, 1)
+            # Only consider positive contributions
+            weighted_sim = torch.nn.functional.relu(weighted_sim)
+            heatmap = torch.sum(weighted_sim, dim=0)  # (H_feat, W_feat)
+            
+            # Normalize
+            heatmap = heatmap - heatmap.min()
+            heatmap = heatmap / (heatmap.max() + 1e-8)
+            
+            heatmaps[b] = heatmap
+            
+        # Upsample to image size
+        heatmaps = torch.nn.functional.interpolate(heatmaps.unsqueeze(1), size=(H_img, W_img), mode='bilinear', align_corners=False).squeeze(1)
+        return heatmaps
 
 
 def evaluate_model(model, dataloader, device):

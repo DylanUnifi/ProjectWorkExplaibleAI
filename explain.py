@@ -11,6 +11,7 @@ from explainability.shap_explainer import SHAPExplainer
 from explainability.lime_explainer import LIMEExplainer
 from explainability.gradcam_explainer import GradCAMExplainer
 from explainability.rollout_explainer import RolloutExplainer
+from explainability.protopnet_explainer import ProtoPNetExplainer
 from explainability.metrics import XAIMetrics
 from explainability.advanced_metrics import ComparativeXAIMetrics
 
@@ -91,9 +92,6 @@ def main():
 
     model = load_model(args, n_classes, in_channels, num_equations, num_concepts)
 
-    if args.model == "protopnet":
-        print("ProtoPNet is self-explaining! No post-hoc explainer needed.")
-        return
 
     print("Initializing Explainers...")
     wrapped_model = ModelWrapper(model)
@@ -115,6 +113,9 @@ def main():
     if hasattr(model, 'attention_rollout'):
         print("Model supports Attention Rollout. Adding RolloutExplainer...")
         explainers["Rollout"] = RolloutExplainer(wrapped_model)
+    if args.model == "protopnet":
+        print("Model is ProtoPNet. Adding intrinsic ProtoPNetExplainer...")
+        explainers["ProtoPNet_Internal"] = ProtoPNetExplainer(wrapped_model)
         
     # Initialize accumulators dynamically based on active explainers
     avg_metrics = {}
