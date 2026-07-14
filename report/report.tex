@@ -115,14 +115,14 @@ When evaluating ResNet50 and ViT, the post-hoc methods exhibited strong dependen
 \end{table}
 
 \begin{figure*}[!t]
-\centerline{\includegraphics[width=\textwidth]{explanations/resnet50_cle4evr_batch_0_grid.png}}
-\caption{Visual comparison of SHAP, LIME, and GradCAM on CLE4EVR using ResNet50.}
-\label{fig:resnet_grid}
-\end{figure*}
-\begin{figure*}[!t]
-\centerline{\includegraphics[width=\textwidth]{explanations/vit_cle4evr_batch_0_grid.png}}
-\caption{Visual comparison of SHAP, LIME, and Attention Rollout on CLE4EVR using Vision Transformer (ViT).}
-\label{fig:vit_grid}
+\centering
+\includegraphics[width=0.48\textwidth]{explanations/resnet50_cle4evr_batch_0_grid.png}\hfill
+\includegraphics[width=0.48\textwidth]{explanations/resnet50_mnmath_batch_0_grid.png}
+\\[0.2cm]
+\includegraphics[width=0.48\textwidth]{explanations/vit_cle4evr_batch_0_grid.png}\hfill
+\includegraphics[width=0.48\textwidth]{explanations/vit_mnmath_batch_0_grid.png}
+\caption{Visual comparison of post-hoc methods. Top Left: ResNet50 on CLE4EVR. Top Right: ResNet50 on MNMath. Bottom Left: ViT on CLE4EVR. Bottom Right: ViT on MNMath.}
+\label{fig:classical_grids}
 \end{figure*}
 
 \begin{itemize}
@@ -156,22 +156,20 @@ The most significant finding of this study emerged when evaluating ProtoPNet. We
 \end{center}
 \end{table}
 
-\begin{figure}[!t]
-\centerline{\includegraphics[width=\linewidth]{explanations/protopnet_cle4evr_agreement_heatmap.png}}
-\caption{Rank Agreement Heatmap on CLE4EVR.}
-\label{fig:heatmap}
-\end{figure}
-
 \begin{figure*}[!t]
-\centerline{\includegraphics[width=\textwidth]{explanations/protopnet_cle4evr_batch_0_grid.png}}
-\caption{Visual comparison of SHAP, LIME, and ProtoPNet Internal on CLE4EVR. SHAP isolates edges, while ProtoPNet highlights broad spatial contexts.}
-\label{fig:grid_comparison}
+\centering
+\includegraphics[width=0.48\textwidth]{explanations/protopnet_cle4evr_agreement_heatmap.png}\hfill
+\includegraphics[width=0.48\textwidth]{explanations/protopnet_mnmath_agreement_heatmap.png}
+\caption{Rank Agreement Heatmaps for ProtoPNet vs Post-Hoc. Left: CLE4EVR. Right: MNMath.}
+\label{fig:heatmaps}
 \end{figure*}
 
 \begin{figure*}[!t]
-\centerline{\includegraphics[width=\textwidth]{explanations/protopnet_mnmath_batch_0_grid.png}}
-\caption{Visual comparison on MNMath. ProtoPNet creates "halos" highlighting global spatial properties, contradicting SHAP's strict edge detection.}
-\label{fig:grid_comparison_mnmath}
+\centering
+\includegraphics[width=0.48\textwidth]{explanations/protopnet_cle4evr_batch_0_grid.png}\hfill
+\includegraphics[width=0.48\textwidth]{explanations/protopnet_mnmath_batch_0_grid.png}
+\caption{Visual comparison of ProtoPNet Internal vs Post-Hoc. Left: CLE4EVR. Right: MNMath. ProtoPNet captures broad contexts, contradicting post-hoc methods.}
+\label{fig:protopnet_grids}
 \end{figure*}
 
 As shown by the negative rank correlation (\textbf{$-0.09$} on CLE4EVR, \textbf{$-0.24$} on MNMath) in Fig. \ref{fig:heatmap}, SHAP and the internal reasoning of ProtoPNet are in complete disagreement. 
