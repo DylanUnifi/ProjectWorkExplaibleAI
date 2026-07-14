@@ -1,0 +1,117 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{hyperref}
+
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\begin{document}
+
+\title{Project Work Explainable AI:\\
+Comparative Study of Post-Hoc Methods vs Intrinsic Interpretability in Vision Models\\
+}
+
+\author{\IEEEauthorblockN{Fouepe Dylan}
+\IEEEauthorblockA{\textit{University of Florence} \\
+dylan.fouepe@edu.unifi.it}
+}
+
+\maketitle
+
+\begin{abstract}
+As deep learning models become increasingly complex, understanding their decision-making processes is critical. This project presents a comprehensive comparative study of Explainable AI (XAI) methods on visual classification tasks. We evaluate popular post-hoc explainability techniques (SHAP, LIME, GradCAM) against the intrinsic interpretability of Prototypical Part Network (ProtoPNet) architectures. Using two distinct datasets (CLE4EVR and MNMath), we propose a unified evaluation pipeline that measures explanation infidelity, complexity, and localization accuracy. Our findings reveal a striking negative correlation between post-hoc attributions and the internal spatial reasoning of ProtoPNet. While methods like SHAP isolate fine-grained edges, the inherently interpretable ProtoPNet captures broader, context-aware spatial patterns, suggesting that post-hoc methods may misrepresent the true cognitive processes of modern neural networks.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Explainable AI, XAI, Deep Learning, ProtoPNet, SHAP, LIME, GradCAM, Computer Vision
+\end{IEEEkeywords}
+
+\section{Introduction}
+The rapid advancement of deep neural networks in computer vision has led to unprecedented accuracy but at the cost of transparency. Convolutional Neural Networks (CNNs) like ResNet \cite{he2016deep} and Vision Transformers (ViTs) \cite{dosovitskiy2020image} are widely considered ``black boxes.'' To mitigate this, post-hoc Explainable AI (XAI) methods such as SHAP \cite{lundberg2017unified}, LIME \cite{ribeiro2016should}, and GradCAM \cite{selvaraju2017grad} have been developed to highlight important input features. 
+
+However, post-hoc methods have been criticized for their lack of fidelity and potential to generate misleading explanations. As an alternative, intrinsically interpretable models like the Prototypical Part Network (ProtoPNet) \cite{chen2019this} incorporate interpretability directly into the architecture by dissecting images into prototypes.
+
+This study systematically compares post-hoc XAI methods against intrinsic interpretability. We pose the following research questions:
+\begin{itemize}
+    \item How do SHAP, LIME, and GradCAM perform on standard architectures (ResNet50, ViT) across datasets of varying object scale?
+    \item Does LIME's reliance on superpixels hinder its localization capability compared to perturbation-based methods?
+    \item Do post-hoc explanations agree with the internal reasoning of an intrinsically interpretable model?
+\end{itemize}
+
+\section{Methodology}
+
+\subsection{Datasets}
+We utilized two custom visual datasets with varying characteristics:
+\begin{itemize}
+    \item \textbf{CLE4EVR}: A dataset composed of 3D objects (spheres, cubes, cylinders) rendered with diverse colors and materials. It tests the models' ability to localize large, well-defined objects in a 3D scene.
+    \item \textbf{MNMath}: A dataset containing handwritten mathematical equations. It challenges the models with fine-grained, high-contrast, stroke-based features.
+\end{itemize}
+
+\subsection{Architectures}
+Three primary architectures were evaluated:
+\begin{enumerate}
+    \item \textbf{ResNet50}: A standard CNN backbone.
+    \item \textbf{Vision Transformer (ViT)}: A self-attention-based architecture.
+    \item \textbf{ProtoPNet}: An inherently interpretable network built on a ResNet backbone that classifies images based on the $L^2$ distance between latent features and learned prototypes.
+\end{enumerate}
+
+\subsection{Explainability Methods}
+The comparative pipeline evaluates three post-hoc methods:
+\begin{itemize}
+    \item \textbf{SHAP (Gradient Explainer)}: Computes Shapley values based on expected gradients.
+    \item \textbf{LIME}: Perturbs the image by hiding superpixels and fits a linear surrogate model.
+    \item \textbf{GradCAM}: Uses the gradients of the target concept flowing into the final convolutional layer.
+\end{itemize}
+For ProtoPNet, we extract its \textbf{Internal Spatial Heatmap}. By converting the prototype $L^2$ distances into similarity scores and weighting them by the final classification layer, we reconstruct the exact spatial map the network used to make its decision.
+
+\section{Evaluation Metrics}
+To ensure a fair and rigorous comparison, we implemented a custom XAI metric suite:
+\begin{itemize}
+    \item \textbf{Infidelity}: Measures how the model's prediction changes when important pixels (according to the explanation) are perturbed. Lower is better.
+    \item \textbf{Complexity}: The fraction of pixels deemed "important" (above a threshold). Lower complexity implies a sparser, more concise explanation.
+    \item \textbf{Localization Accuracy}: Evaluated via Average Precision (AP) against ground-truth object masks. Higher is better.
+    \item \textbf{Rank Agreement (Spearman)}: Measures the correlation between the rankings of pixel importance given by two different methods.
+\end{itemize}
+
+\section{Experimental Results}
+
+\subsection{Post-Hoc Methods on Classical Backbones}
+When evaluating ResNet50 and ViT, the post-hoc methods exhibited strong dependency on the dataset characteristics:
+\begin{itemize}
+    \item \textbf{MNMath (Fine-grained)}: SHAP significantly outperformed GradCAM. GradCAM's low spatial resolution (e.g., $7 \times 7$ feature maps) caused its heatmaps to blur over the fine strokes of the digits, resulting in poor localization.
+    \item \textbf{CLE4EVR (Large Objects)}: GradCAM rebounded, performing on par with SHAP. The large 3D objects perfectly matched the scale of GradCAM's receptive field. LIME severely underperformed due to its default SLIC superpixel segmentation, which fragmented the smooth 3D objects.
+\end{itemize}
+
+\subsubsection{LIME Ablation Study}
+To investigate LIME's failure on CLE4EVR, we conducted an ablation study where LIME's segment count was forced to match the expected number of objects in the scene. While visually improving the superpixel alignment to object boundaries, it drastically increased infidelity, suggesting that linear surrogates struggle with highly non-linear spatial reasoning over large objects.
+
+\subsection{Post-Hoc vs. Intrinsic Interpretability}
+The most significant finding of this study emerged when evaluating ProtoPNet. We ran SHAP and LIME on ProtoPNet and compared them to ProtoPNet's internal similarity heatmaps.
+
+\begin{figure}[htbp]
+\centerline{\includegraphics[width=\linewidth]{explanations/protopnet_cle4evr_agreement_heatmap.png}}
+\caption{Rank Agreement Heatmap on CLE4EVR.}
+\label{fig:heatmap}
+\end{figure}
+
+As shown by the negative rank correlation ($-0.09$ on CLE4EVR, $-0.24$ on MNMath), SHAP and the internal reasoning of ProtoPNet are in complete disagreement. 
+\begin{itemize}
+    \item \textbf{SHAP} highlights fine edges and bright pixels, producing a highly sparse explanation (Complexity: 0.001).
+    \item \textbf{ProtoPNet Internal} highlights broad, diffuse spatial regions, including the objects and their surrounding context (Complexity: 0.52).
+\end{itemize}
+
+While SHAP achieves higher localization accuracy against strict bounding boxes, it fails to represent how the network actually reasons. ProtoPNet learns prototypes that capture broader contextual relationships (e.g., "object glow" or "inter-object spacing") rather than strict object boundaries.
+
+\section{Conclusion}
+This study demonstrates the risks of relying solely on post-hoc explainers. Methods like SHAP and LIME provide neat, edge-aligned visual explanations that align with human intuition, but they fundamentally disagree with the actual internal cognitive mechanisms of models designed for intrinsic interpretability. Evaluating XAI methods strictly on "localization accuracy" can be misleading if the ground truth masks assume networks reason like humans. Future work will extend this evaluation framework to hybrid quantum-classical neural networks (Hybrid QCNN/QViT).
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}

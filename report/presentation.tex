@@ -1,0 +1,107 @@
+\documentclass{beamer}
+
+\usetheme{Madrid}
+\usecolortheme{default}
+
+\title[XAI Comparative Study]{Comparative Study of Post-Hoc Methods vs Intrinsic Interpretability in Vision Models}
+\author{Fouepe Dylan}
+\institute{University of Florence}
+\date{June 2026}
+
+\begin{document}
+
+\begin{frame}
+    \titlepage
+\end{frame}
+
+\begin{frame}{Context and Motivation}
+    \begin{itemize}
+        \item Deep learning models (CNNs, ViTs) have opaque decision-making processes.
+        \item \textbf{Post-Hoc XAI}: Methods like SHAP, LIME, and GradCAM attempt to explain models \textit{after} training by analyzing inputs and outputs.
+        \item \textbf{Intrinsic XAI}: Models like ProtoPNet are designed to be interpretable by default.
+        \item \textbf{Goal}: Compare how these explanations behave across different architectures and datasets, and evaluate if post-hoc methods accurately reflect a network's true reasoning.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Experimental Setup}
+    \textbf{Datasets:}
+    \begin{itemize}
+        \item \textit{CLE4EVR}: 3D rendered objects (focus on spatial localization of large objects).
+        \item \textit{MNMath}: Handwritten mathematical equations (focus on fine-grained strokes).
+    \end{itemize}
+    \vspace{0.5cm}
+    \textbf{Models evaluated:}
+    \begin{itemize}
+        \item ResNet50 (Classical CNN)
+        \item Vision Transformer (ViT)
+        \item ProtoPNet (Inherently interpretable)
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Explainers and Metrics}
+    \textbf{Evaluated Explainers:}
+    \begin{itemize}
+        \item SHAP (Perturbation / Game Theory)
+        \item LIME (Local surrogate)
+        \item GradCAM (Feature gradients)
+        \item \textbf{ProtoPNet Internal} (Direct extraction of prototype spatial similarities)
+    \end{itemize}
+    \vspace{0.5cm}
+    \textbf{Evaluation Metrics:}
+    \begin{itemize}
+        \item \textit{Infidelity}: Do important pixels actually affect the prediction?
+        \item \textit{Complexity}: How sparse is the explanation?
+        \item \textit{Localization}: Does the explanation overlap with bounding boxes?
+        \item \textit{Rank Agreement}: Do two methods agree on pixel importance?
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Results: Classical Backbones (ResNet/ViT)}
+    \textbf{Key findings on post-hoc methods:}
+    \begin{itemize}
+        \item \textbf{Scale matters}: GradCAM performs very poorly on MNMath due to its low spatial resolution, but excels on CLE4EVR where objects match its receptive field.
+        \item \textbf{LIME's limitation}: LIME struggles on CLE4EVR due to superpixel fragmentation. 
+        \item \textbf{Ablation Study}: Forcing LIME to use larger superpixels improves visual alignment but destroys its fidelity, proving linear surrogates struggle with large object semantics.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Results: Post-Hoc vs Intrinsic}
+    \textbf{The ProtoPNet Experiment:}
+    \begin{itemize}
+        \item We ran SHAP and LIME on ProtoPNet.
+        \item We compared them against ProtoPNet's own internal explanations.
+    \end{itemize}
+    \vspace{0.5cm}
+    \begin{block}{The Clash of Paradigms}
+    SHAP highlights fine edges (Complexity: 0.001) resulting in high localization scores. \\
+    ProtoPNet internally uses broad, context-aware regions (Complexity: 0.52).
+    \end{block}
+\end{frame}
+
+\begin{frame}{Results: The Agreement Matrix}
+    \textbf{Total Disagreement:}
+    \begin{itemize}
+        \item Rank correlation between SHAP and ProtoPNet Internal is \textbf{negative} (-0.24 on MNMath).
+        \item Pixels that SHAP claims are "most important" are not highly ranked by the model's actual reasoning process.
+        \item Post-hoc methods provide explanations that look good to humans, but misrepresent the neural network.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Conclusion}
+    \begin{itemize}
+        \item There is no universal "best" post-hoc XAI method; performance is heavily dependent on object scale and network architecture.
+        \item Relying strictly on "Localization Accuracy" is dangerous: it assumes networks reason using human-defined object boundaries.
+        \item Intrinsic interpretability reveals that models learn broad spatial contexts.
+        \item \textbf{Future Work}: Extend the comparative framework to Quantum Neural Networks.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}
+    \begin{center}
+        \Huge Thank You! \\
+        \vspace{1cm}
+        \large Questions?
+    \end{center}
+\end{frame}
+
+\end{document}
