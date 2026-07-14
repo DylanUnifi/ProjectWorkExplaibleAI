@@ -4,6 +4,7 @@
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{algorithmic}
 \usepackage{graphicx}
+\usepackage{multirow}
 \usepackage{textcomp}
 \usepackage{xcolor}
 \usepackage{hyperref}
@@ -82,12 +83,43 @@ To ensure a fair and rigorous comparison, we implemented a custom XAI metric sui
 \section{Experimental Results}
 
 \subsection{Post-Hoc Methods on Classical Backbones}
-When evaluating ResNet50 and ViT, the post-hoc methods exhibited strong dependency on the dataset characteristics:
+When evaluating ResNet50 and ViT, the post-hoc methods exhibited strong dependency on the dataset characteristics (see Table \ref{tab:classical_metrics}).
+
+\begin{table}[htbp]
+\caption{Post-Hoc Metrics on ResNet50 and ViT (Mean over batches)}
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+\textbf{Dataset} & \textbf{Model} & \textbf{Explainer} & \textbf{Infidelity $\downarrow$} & \textbf{Complexity $\downarrow$} \\
+\hline
+\multirow{4}{*}{CLE4EVR} & \multirow{2}{*}{ResNet50} & SHAP & [XX.X] & \textbf{[X.XXX]} \\
+& & GradCAM & \textbf{[XX.X]} & [X.XXX] \\
+\cline{2-5}
+& \multirow{2}{*}{ViT} & SHAP & [XX.X] & \textbf{[X.XXX]} \\
+& & Rollout & [XX.X] & [X.XXX] \\
+\hline
+\multirow{4}{*}{MNMath} & \multirow{2}{*}{ResNet50} & SHAP & \textbf{[XX.X]} & \textbf{[X.XXX]} \\
+& & GradCAM & [XX.X] & [X.XXX] \\
+\cline{2-5}
+& \multirow{2}{*}{ViT} & SHAP & \textbf{[XX.X]} & \textbf{[X.XXX]} \\
+& & Rollout & [XX.X] & [X.XXX] \\
+\hline
+\end{tabular}
+\label{tab:classical_metrics}
+\end{center}
+\end{table}
+
 \begin{figure*}[htbp]
 \centerline{\includegraphics[width=\textwidth]{explanations/resnet50_cle4evr_batch_0_grid.png}}
 \caption{Visual comparison of SHAP, LIME, and GradCAM on CLE4EVR using ResNet50.}
 \label{fig:resnet_grid}
 \end{figure*}
+\begin{figure*}[htbp]
+\centerline{\includegraphics[width=\textwidth]{explanations/vit_cle4evr_batch_0_grid.png}}
+\caption{Visual comparison of SHAP, LIME, and Attention Rollout on CLE4EVR using Vision Transformer (ViT).}
+\label{fig:vit_grid}
+\end{figure*}
+
 \begin{itemize}
     \item \textbf{MNMath (Fine-grained)}: SHAP significantly outperformed GradCAM. GradCAM's low spatial resolution (e.g., $7 \times 7$ feature maps) caused its heatmaps to blur over the fine strokes of the digits, resulting in poor localization.
     \item \textbf{CLE4EVR (Large Objects)}: GradCAM rebounded, performing on par with SHAP. The large 3D objects perfectly matched the scale of GradCAM's receptive field. LIME severely underperformed due to its default SLIC superpixel segmentation, which fragmented the smooth 3D objects.
@@ -97,7 +129,27 @@ When evaluating ResNet50 and ViT, the post-hoc methods exhibited strong dependen
 To investigate LIME's failure on CLE4EVR, we conducted an ablation study where LIME's segment count was forced to match the expected number of objects in the scene. While visually improving the superpixel alignment to object boundaries, it drastically increased infidelity, suggesting that linear surrogates struggle with highly non-linear spatial reasoning over large objects.
 
 \subsection{Post-Hoc vs. Intrinsic Interpretability}
-The most significant finding of this study emerged when evaluating ProtoPNet. We ran SHAP and LIME on ProtoPNet and compared them to ProtoPNet's internal similarity heatmaps.
+The most significant finding of this study emerged when evaluating ProtoPNet. We ran SHAP and LIME on ProtoPNet and compared them to ProtoPNet's internal similarity heatmaps (see Table \ref{tab:protopnet_metrics}).
+
+\begin{table}[htbp]
+\caption{ProtoPNet Intrinsic vs Post-Hoc Metrics}
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+\textbf{Dataset} & \textbf{Method} & \textbf{Infidelity $\downarrow$} & \textbf{Complexity $\downarrow$} & \textbf{Localization $\uparrow$} \\
+\hline
+\multirow{3}{*}{CLE4EVR} & SHAP & 0.130 & \textbf{0.001} & 0.184 \\
+& LIME & 16.010 & 0.272 & 0.106 \\
+& \textbf{Internal} & 9.081 & \textbf{0.523} & 0.084 \\
+\hline
+\multirow{3}{*}{MNMath} & SHAP & 46.544 & \textbf{0.008} & 0.516 \\
+& LIME & 44.774 & 0.318 & 0.271 \\
+& \textbf{Internal} & 46.908 & \textbf{0.170} & 0.173 \\
+\hline
+\end{tabular}
+\label{tab:protopnet_metrics}
+\end{center}
+\end{table}
 
 \begin{figure}[htbp]
 \centerline{\includegraphics[width=\linewidth]{explanations/protopnet_cle4evr_agreement_heatmap.png}}
@@ -111,10 +163,16 @@ The most significant finding of this study emerged when evaluating ProtoPNet. We
 \label{fig:grid_comparison}
 \end{figure*}
 
-As shown by the negative rank correlation ($-0.09$ on CLE4EVR, $-0.24$ on MNMath) in Fig. \ref{fig:heatmap}, SHAP and the internal reasoning of ProtoPNet are in complete disagreement. 
+\begin{figure*}[htbp]
+\centerline{\includegraphics[width=\textwidth]{explanations/protopnet_mnmath_batch_0_grid.png}}
+\caption{Visual comparison on MNMath. ProtoPNet creates "halos" highlighting global spatial properties, contradicting SHAP's strict edge detection.}
+\label{fig:grid_comparison_mnmath}
+\end{figure*}
+
+As shown by the negative rank correlation (\textbf{$-0.09$} on CLE4EVR, \textbf{$-0.24$} on MNMath) in Fig. \ref{fig:heatmap}, SHAP and the internal reasoning of ProtoPNet are in complete disagreement. 
 \begin{itemize}
-    \item \textbf{SHAP} highlights fine edges and bright pixels, producing a highly sparse explanation (Complexity: 0.001).
-    \item \textbf{ProtoPNet Internal} highlights broad, diffuse spatial regions, including the objects and their surrounding context (Complexity: 0.52, see Fig. \ref{fig:grid_comparison}).
+    \item \textbf{SHAP} highlights fine edges and bright pixels, producing a highly sparse explanation (\textbf{Complexity: 0.001}).
+    \item \textbf{ProtoPNet Internal} highlights broad, diffuse spatial regions, including the objects and their surrounding context (\textbf{Complexity: 0.52}, see Fig. \ref{fig:grid_comparison}).
 \end{itemize}
 
 While SHAP achieves higher localization accuracy against strict bounding boxes, it fails to represent how the network actually reasons. ProtoPNet learns prototypes that capture broader contextual relationships (e.g., "object glow" or "inter-object spacing") rather than strict object boundaries.
