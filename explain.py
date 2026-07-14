@@ -11,7 +11,8 @@ from explainability.shap_explainer import SHAPExplainer
 from explainability.lime_explainer import LIMEExplainer
 from explainability.metrics import XAIMetrics
 from explainability.advanced_metrics import ComparativeXAIMetrics
-from explainability.visualization import plot_attribution_comparison
+
+from explainability.advanced_visualization import plot_comparison_grid, plot_agreement_heatmap, plot_metrics_comparison
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -105,6 +106,14 @@ def main():
         "lime_complexity": 0.0
     }
     num_batches = 0
+    
+    summary_dict = {
+        args.model: {
+            "SHAP": [],
+            "LIME": []
+        }
+    }
+    all_comparison_matrices = []
 
     for i, batch in enumerate(tqdm(test_loader, desc="Generating Explanations")):
         images, labels = batch["image"].to(args.device), batch["label"].to(args.device)
@@ -126,6 +135,14 @@ def main():
         shap_complexity = ComparativeXAIMetrics.explanation_complexity(shap_attrs)
         lime_complexity = ComparativeXAIMetrics.explanation_complexity(lime_attrs)
         
+        summary_dict[args.model]["SHAP"].append({"infidelity": shap_infidelity, "complexity": shap_complexity})
+        summary_dict[args.model]["LIME"].append({"infidelity": lime_infidelity, "complexity": lime_complexity})
+        
+        # Accumulate matrix
+        explanations_dict = {"SHAP": shap_attrs, "LIME": lime_attrs}
+        comparison_matrix, methods = ComparativeXAIMetrics.compare_all_methods(explanations_dict, metrics_to_compute=["rank_agreement"])
+        all_comparison_matrices.append(comparison_matrix["rank_agreement"])
+        
         wandb.log({
             "shap_infidelity": shap_infidelity, 
             "lime_infidelity": lime_infidelity,
@@ -137,14 +154,13 @@ def main():
         
         import os
         os.makedirs("explanations", exist_ok=True)
-        save_path = f"explanations/{args.model}_{args.dataset}_batch_{i}.png"
+        save_path = f"explanations/{args.model}_{args.dataset}_batch_{i}_grid.png"
         
-        # Visualize first image in batch
-        plot_attribution_comparison(
+        # Visualize first image in batch using comparison grid
+        plot_comparison_grid(
             images[0],
-            {"SHAP": shap_attrs[0], "LIME": lime_attrs[0]},
-            save_path=save_path,
-            true_label=eval_labels[0].item()
+            {args.model: {"SHAP": shap_attrs[0], "LIME": lime_attrs[0]}},
+            save_path=save_path
         )
         wandb.log({f"Explanation_Batch_{i}": wandb.Image(save_path)})
         
@@ -169,6 +185,22 @@ def main():
         
         # Log averages to W&B
         wandb.log({f"avg_{k}": v for k, v in avg_metrics.items()})
+        
+        import os
+        import numpy as np
+        os.makedirs("explanations", exist_ok=True)
+        
+        # 1. Plot Agreement Heatmap
+        if all_comparison_matrices:
+            avg_matrix = np.mean(all_comparison_matrices, axis=0)
+            heatmap_path = f"explanations/{args.model}_{args.dataset}_agreement_heatmap.png"
+            plot_agreement_heatmap(avg_matrix, methods, save_path=heatmap_path)
+            wandb.log({"Agreement_Heatmap": wandb.Image(heatmap_path)})
+        
+        # 2. Plot Metrics Comparison
+        metrics_plot_path = f"explanations/{args.model}_{args.dataset}_metrics_comparison.png"
+        plot_metrics_comparison(summary_dict, save_path=metrics_plot_path)
+        wandb.log({"Metrics_Comparison": wandb.Image(metrics_plot_path)})
 
     wandb.finish()
     print("Explanations complete and logged to W&B!")

@@ -120,66 +120,62 @@ def plot_metrics_comparison(summary_dict, save_path):
     Plot bar chart comparing metrics across models/methods.
     
     Args:
-        summary_dict: Dict[model_name][method_name] = metrics_dict
+        summary_dict: Dict[model_name][method_name] = metrics_dict or list of metrics
         save_path: Path to save figure
     """
     
     # Extract data
     models = []
     methods = []
-    faithfulness_ins = []
-    faithfulness_del = []
-    sparsity = []
+    infidelity_list = []
+    complexity_list = []
     
     for model_name, model_methods in summary_dict.items():
-        for method_name, metrics_list in model_methods.items():
-            if not metrics_list:
+        for method_name, metrics_data in model_methods.items():
+            if not metrics_data:
                 continue
             
             models.append(model_name)
             methods.append(method_name)
-            faithfulness_ins.append(np.mean([m["faithfulness_insertion"] for m in metrics_list]))
-            faithfulness_del.append(np.mean([m["faithfulness_deletion"] for m in metrics_list]))
-            sparsity.append(np.mean([m["sparsity"] for m in metrics_list]))
+            
+            # Support both list of dicts or a single dict with averages
+            if isinstance(metrics_data, list):
+                infidelity_list.append(np.mean([m.get("infidelity", 0.0) for m in metrics_data]))
+                complexity_list.append(np.mean([m.get("complexity", 0.0) for m in metrics_data]))
+            else:
+                infidelity_list.append(metrics_data.get("infidelity", 0.0))
+                complexity_list.append(metrics_data.get("complexity", 0.0))
     
     # Create labels
     labels = [f"{m}\n{method}" for m, method in zip(models, methods)]
     
     # Plot
-    fig, axes = plt.subplots(1, 3, figsize=(18, 6))
+    fig, axes = plt.subplots(1, 2, figsize=(12, 6))
     
     x = np.arange(len(labels))
     width = 0.6
     
-    # Faithfulness Insertion (higher = better)
-    axes[0].bar(x, faithfulness_ins, width, color="steelblue")
-    axes[0].set_ylabel("Faithfulness (Insertion)", fontsize=12)
-    axes[0].set_title("Higher = Better", fontsize=14, fontweight="bold")
+    # Infidelity (lower = better)
+    axes[0].bar(x, infidelity_list, width, color="coral")
+    axes[0].set_ylabel("Infidelity", fontsize=12)
+    axes[0].set_title("Lower = Better", fontsize=14, fontweight="bold")
     axes[0].set_xticks(x)
     axes[0].set_xticklabels(labels, rotation=45, ha="right", fontsize=8)
-    axes[0].axhline(y=np.mean(faithfulness_ins), color="red", linestyle="--", label="Mean")
+    if len(infidelity_list) > 0:
+        axes[0].axhline(y=np.mean(infidelity_list), color="red", linestyle="--", label="Mean")
     axes[0].legend()
     axes[0].grid(axis="y", alpha=0.3)
     
-    # Faithfulness Deletion (lower = better)
-    axes[1].bar(x, faithfulness_del, width, color="coral")
-    axes[1].set_ylabel("Faithfulness (Deletion)", fontsize=12)
-    axes[1].set_title("Lower = Better", fontsize=14, fontweight="bold")
+    # Complexity (lower = simpler)
+    axes[1].bar(x, complexity_list, width, color="mediumseagreen")
+    axes[1].set_ylabel("Complexity", fontsize=12)
+    axes[1].set_title("Lower = Simpler", fontsize=14, fontweight="bold")
     axes[1].set_xticks(x)
     axes[1].set_xticklabels(labels, rotation=45, ha="right", fontsize=8)
-    axes[1].axhline(y=np.mean(faithfulness_del), color="red", linestyle="--", label="Mean")
+    if len(complexity_list) > 0:
+        axes[1].axhline(y=np.mean(complexity_list), color="red", linestyle="--", label="Mean")
     axes[1].legend()
     axes[1].grid(axis="y", alpha=0.3)
-    
-    # Sparsity (higher = simpler explanation)
-    axes[2].bar(x, sparsity, width, color="mediumseagreen")
-    axes[2].set_ylabel("Sparsity", fontsize=12)
-    axes[2].set_title("Higher = Simpler", fontsize=14, fontweight="bold")
-    axes[2].set_xticks(x)
-    axes[2].set_xticklabels(labels, rotation=45, ha="right", fontsize=8)
-    axes[2].axhline(y=np.mean(sparsity), color="red", linestyle="--", label="Mean")
-    axes[2].legend()
-    axes[2].grid(axis="y", alpha=0.3)
     
     plt.suptitle("XAI Metrics Comparison", fontsize=16, fontweight="bold", y=1.02)
     plt.tight_layout()
