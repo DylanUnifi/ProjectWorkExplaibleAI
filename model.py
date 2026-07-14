@@ -176,6 +176,7 @@ class ViTClassifier(nn.Module):
                 "google/vit-base-patch16-224-in21k",
                 num_labels=n_classes * max(1, num_equations),
                 ignore_mismatched_sizes=True,
+                attn_implementation="eager",
             )
         else:
             # Train from scratch
@@ -186,6 +187,7 @@ class ViTClassifier(nn.Module):
                 num_hidden_layers=12,
                 num_attention_heads=12,
                 intermediate_size=3072,
+                attn_implementation="eager",
             )
             self.vit = ViTForImageClassification(config)
             
