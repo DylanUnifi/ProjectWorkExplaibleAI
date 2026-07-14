@@ -141,6 +141,14 @@ class ComparativeXAIMetrics:
         """
         attr_abs = attribution.abs().sum(dim=1)  # (B, H, W)
         
+        # Upsample mask if needed
+        if ground_truth_mask.shape != attr_abs.shape:
+            ground_truth_mask = torch.nn.functional.interpolate(
+                ground_truth_mask.unsqueeze(1).float(),
+                size=attr_abs.shape[1:],
+                mode="nearest"
+            ).squeeze(1)
+            
         # Flatten
         attr_flat = attr_abs.view(attr_abs.shape[0], -1).detach().cpu().numpy()
         mask_flat = ground_truth_mask.view(ground_truth_mask.shape[0], -1).detach().cpu().numpy()

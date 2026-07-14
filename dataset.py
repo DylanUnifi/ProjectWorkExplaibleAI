@@ -3,6 +3,35 @@ from torchvision import transforms
 from torch.utils.data import Subset
 import torch
 import numpy as np
+import numpy as np
+
+def create_clevr_mask(objects, target_attrs=None, target_ids=None, image_size=(240, 320)):
+    """
+    Create a binary mask for objects matching target_attrs or target_ids.
+    If both are None, creates a mask for all objects.
+    """
+    mask = np.zeros(image_size, dtype=np.float32)
+    
+    for i, obj in enumerate(objects):
+        if target_ids is not None and i not in target_ids:
+            continue
+            
+        if target_attrs is not None and len(target_attrs) > 0:
+            obj_attrs = [obj.get("color"), obj.get("size"), obj.get("shape"), obj.get("material")]
+            if not all(attr in obj_attrs for attr in target_attrs if attr is not None):
+                continue
+                
+        if "pixel_coords" in obj:
+            coords = obj["pixel_coords"]
+            col, row = int(coords[0]), int(coords[1])
+            radius = 35 if obj.get("size") == "large" else 20
+            
+            Y, X = np.ogrid[:image_size[0], :image_size[1]]
+            dist_from_center = np.sqrt((X - col)**2 + (Y - row)**2)
+            mask[dist_from_center <= radius] = 1.0
+            
+    return mask
+
 
 def build_transform(grayscale: bool = True, augment: bool = False):
     """Standardized transformation pipeline."""
@@ -131,13 +160,16 @@ class CLE4EVRDataset(Dataset):
     def __len__(self):
         return len(self.scenes)
 
-    def _compute_label(self, objects):
+    def _compute_label_and_targets(self, objects):
         # positive iff at least two objects have the same color and shape
+        target_ids = []
+        label = 0
         for i in range(len(objects)):
             for j in range(i + 1, len(objects)):
                 if objects[i].get("color") == objects[j].get("color") and objects[i].get("shape") == objects[j].get("shape"):
-                    return 1
-        return 0
+                    target_ids.extend([i, j])
+                    label = 1
+        return label, list(set(target_ids))
 
     def __getitem__(self, idx):
         scene = self.scenes[idx]
@@ -154,11 +186,18 @@ class CLE4EVRDataset(Dataset):
             image = self.transform(image)
 
         # Force compute CLE4EVR rule (ignore CLEVR-Hans class_id if present)
-        label = self._compute_label(scene.get("objects", []))
+        label, target_ids = self._compute_label_and_targets(scene.get("objects", []))
+        
+        gt_mask = create_clevr_mask(scene.get("objects", []), target_ids=target_ids if label == 1 else None)
+        gt_mask = torch.from_numpy(gt_mask).float()
+        conf_mask = torch.zeros_like(gt_mask)
 
         return {
             "image": image,
             "label": torch.tensor(label, dtype=torch.long),
+            "ground_truth_mask": gt_mask,
+            "confounder_mask": conf_mask,
+            "confounder_info": {}
         }
 
 
@@ -256,14 +295,23 @@ class CLEVRHansDataset(Dataset):
 
         confounder_info = {}
         is_confounded = False
+        
+        objects = scene.get("objects", [])
+        conf_mask = torch.zeros((240, 320), dtype=torch.float32)
+        
         if self.return_confounders and self.confounders:
             class_key = label
             if class_key in self.confounders:
                 is_confounded = self.confounders[class_key]["confounded"]
+                conf_attrs = self.confounders[class_key].get("attributes", [])
                 confounder_info = {
                     "is_confounded": is_confounded,
-                    "confounder_attrs": self.confounders[class_key].get("attributes", []),
+                    "confounder_attrs": conf_attrs,
                 }
+                if is_confounded and len(conf_attrs) > 0:
+                    conf_mask = torch.from_numpy(create_clevr_mask(objects, target_attrs=conf_attrs)).float()
+
+        gt_mask = torch.from_numpy(create_clevr_mask(objects)).float()
 
         # Group index for GroupDRO: 0=confounded, 1=clean
         group_idx = 0 if is_confounded else 1
@@ -274,6 +322,8 @@ class CLEVRHansDataset(Dataset):
             "confounder_info": confounder_info,
             "image_id": img_filename,
             "group_idx": group_idx,
+            "ground_truth_mask": gt_mask,
+            "confounder_mask": conf_mask,
         }
 
 
@@ -281,9 +331,12 @@ def clevr_collate_fn(batch):
     """Custom collate that handles variable-length confounder_info."""
     images = torch.stack([item["image"] for item in batch])
     labels = torch.tensor([item["label"] for item in batch], dtype=torch.long)
-    image_ids = [item["image_id"] for item in batch]
-    confounder_infos = [item["confounder_info"] for item in batch]
-    group_idx = torch.tensor([item["group_idx"] for item in batch], dtype=torch.long)
+    image_ids = [item.get("image_id", "") for item in batch]
+    confounder_infos = [item.get("confounder_info", {}) for item in batch]
+    group_idx = torch.tensor([item.get("group_idx", 0) for item in batch], dtype=torch.long)
+    
+    gt_masks = torch.stack([item.get("ground_truth_mask", torch.zeros((224, 224))) for item in batch])
+    conf_masks = torch.stack([item.get("confounder_mask", torch.zeros((224, 224))) for item in batch])
 
     return {
         "image": images,
@@ -291,6 +344,8 @@ def clevr_collate_fn(batch):
         "confounder_info": confounder_infos,
         "image_id": image_ids,
         "group_idx": group_idx,
+        "ground_truth_mask": gt_masks,
+        "confounder_mask": conf_masks,
     }
 
 
@@ -463,21 +518,26 @@ class MNMathDataset(Dataset):
         img_path = self.list_images[idx]
         image = Image.open(img_path).convert("L")  # Grayscale
         
-        if self.transform:
-            image = self.transform(image)
+        image_tensor = self.transform(image) if self.transform else image
             
         label = torch.tensor(self.labels[idx], dtype=torch.long)
         concepts = torch.tensor(self.concepts[idx], dtype=torch.long)
         
+        # Ground truth mask for MNMath: non-zero pixels (bright digits on dark background)
+        gt_mask = (torch.tensor(np.array(image)).float() > 0.1).float()
+        conf_mask = torch.zeros_like(gt_mask)
+        
         # Format identical to CLEVR-Hans for compatibility with train_all_models.py
         return {
-            "image": image,
+            "image": image_tensor if 'image_tensor' in locals() else (self.transform(image) if self.transform else image),
             "label": label,
             "concepts": concepts,
             "group": 0,  # default
             "scene": {"concepts": concepts.tolist()},
             "confounder_info": {},
-            "image_path": str(img_path)
+            "image_path": str(img_path),
+            "ground_truth_mask": gt_mask,
+            "confounder_mask": conf_mask,
         }
 
 

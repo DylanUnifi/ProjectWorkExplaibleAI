@@ -128,6 +128,14 @@ def main():
     for i, batch in enumerate(tqdm(test_loader, desc="Generating Explanations")):
         images, labels = batch["image"].to(args.device), batch["label"].to(args.device)
         
+        gt_masks = batch.get("ground_truth_mask")
+        if gt_masks is not None:
+            gt_masks = gt_masks.to(args.device)
+            
+        conf_masks = batch.get("confounder_mask")
+        if conf_masks is not None:
+            conf_masks = conf_masks.to(args.device)
+        
         # For evaluation, take the first label if there are multiple equations
         eval_labels = labels[:, 0] if labels.dim() > 1 else labels
         
@@ -150,6 +158,23 @@ def main():
             
             avg_metrics[f"{name.lower()}_infidelity"] += infid
             avg_metrics[f"{name.lower()}_complexity"] += comp
+            
+            # New Metrics
+            if gt_masks is not None:
+                loc_acc = ComparativeXAIMetrics.localization_accuracy(attrs, gt_masks)
+                batch_log_metrics[f"{name.lower()}_localization"] = loc_acc
+                
+                if f"{name.lower()}_localization" not in avg_metrics:
+                    avg_metrics[f"{name.lower()}_localization"] = 0.0
+                avg_metrics[f"{name.lower()}_localization"] += loc_acc
+                
+            if conf_masks is not None:
+                conf_sens = ComparativeXAIMetrics.confounder_sensitivity(attrs, conf_masks)
+                batch_log_metrics[f"{name.lower()}_confounder_sens"] = conf_sens
+                
+                if f"{name.lower()}_confounder_sens" not in avg_metrics:
+                    avg_metrics[f"{name.lower()}_confounder_sens"] = 0.0
+                avg_metrics[f"{name.lower()}_confounder_sens"] += conf_sens
             
         # Hardcoded SHAP vs LIME for continuity
         rank_corr = ComparativeXAIMetrics.rank_agreement(explanations_dict["SHAP"], explanations_dict["LIME"], method="spearman")
