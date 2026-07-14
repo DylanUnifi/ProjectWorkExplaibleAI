@@ -34,7 +34,7 @@
 
 \begin{frame}{Context and Motivation}
     \begin{columns}
-        \begin{column}{0.45\textwidth}
+        \begin{column}{0.5\textwidth}
             \textbf{The "Black Box" Problem}
             \begin{itemize}
                 \item Deep learning models (CNNs, ViTs) have opaque decision-making processes.
@@ -42,27 +42,55 @@
                 \item \textbf{Intrinsic XAI}: Models interpretable by design (e.g., \textbf{ProtoPNet}).
             \end{itemize}
         \end{column}
-        \begin{column}{0.55\textwidth}
-            \begin{block}{ProtoPNet Similarity}
-                \vspace{-0.4cm}
-                {\small
-                \begin{equation*}
-                sim(\mathbf{z}, \mathbf{p}_j) = \log\left(\frac{d^2(\mathbf{z}, \mathbf{p}_j) + 1}{d^2(\mathbf{z}, \mathbf{p}_j) + \epsilon}\right)
-                \end{equation*}
-                }
-            \end{block}
-            \begin{block}{SHAP (Shapley Values)}
-                \vspace{-0.4cm}
-                {\small
-                \begin{equation*}
-                \phi_i(v) = \sum_{S} \frac{|S|! (n - |S| - 1)!}{n!} [v(S \cup \{i\}) - v(S)]
-                \end{equation*}
-                }
-            \end{block}
+        \begin{column}{0.5\textwidth}
+            \begin{center}
+                \includegraphics[width=0.9\textwidth, height=0.6\textheight, keepaspectratio]{explanations/resnet50_cle4evr_batch_0.png}
+            \end{center}
         \end{column}
     \end{columns}
     \vspace{0.4cm}
     {\tiny \textit{References: Lundberg \& Lee (SHAP), NeurIPS 2017 \quad | \quad Ribeiro et al. (LIME), KDD 2016 \quad | \quad Chen et al. (ProtoPNet), NeurIPS 2019}}
+\end{frame}
+
+\begin{frame}{Mathematical Foundations of XAI Methods}
+    \begin{columns}
+        \begin{column}{0.33\textwidth}
+            \begin{block}{ProtoPNet Similarity}
+                \vspace{-0.2cm}
+                {\small
+                \begin{equation*}
+                sim = \log\left(\frac{d^2 + 1}{d^2 + \epsilon}\right)
+                \end{equation*}
+                }
+                \vspace{-0.2cm}
+                \scriptsize{Inverted $L^2$ distance between latent patch and learned prototype.}
+            \end{block}
+        \end{column}
+        \begin{column}{0.33\textwidth}
+            \begin{block}{SHAP (Shapley Values)}
+                \vspace{-0.2cm}
+                {\small
+                \begin{equation*}
+                \phi_i = \sum_{S} \frac{|S|! (n - |S| - 1)!}{n!} \Delta v
+                \end{equation*}
+                }
+                \vspace{-0.2cm}
+                \scriptsize{Marginal contribution over all possible feature coalitions.}
+            \end{block}
+        \end{column}
+        \begin{column}{0.33\textwidth}
+            \begin{block}{LIME (Local Surrogate)}
+                \vspace{-0.2cm}
+                {\small
+                \begin{equation*}
+                \xi(x) = \underset{g \in G}{\text{arg\,min}} \,\, \mathcal{L} + \Omega(g)
+                \end{equation*}
+                }
+                \vspace{-0.2cm}
+                \scriptsize{Minimizes fidelity loss $\mathcal{L}$ penalized by explanation complexity $\Omega$.}
+            \end{block}
+        \end{column}
+    \end{columns}
 \end{frame}
 
 \begin{frame}{Experimental Setup \& Metrics}

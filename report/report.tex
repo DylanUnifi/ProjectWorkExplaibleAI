@@ -73,7 +73,10 @@ The comparative pipeline evaluates three post-hoc methods:
     \begin{equation}
     \phi_i(v) = \sum_{S \subseteq N \setminus \{i\}} \frac{|S|! (n - |S| - 1)!}{n!} [v(S \cup \{i\}) - v(S)]
     \end{equation}
-    \item \textbf{LIME}: Perturbs the image by hiding superpixels and fits a linear surrogate model.
+    \item \textbf{LIME}: Perturbs the image by hiding superpixels and fits a linear surrogate model $g \in G$ to locally approximate the complex model $f$. The objective is to minimize the fidelity loss $\mathcal{L}$ weighted by proximity $\pi_x$, penalized by complexity $\Omega(g)$:
+    \begin{equation}
+    \xi(x) = \underset{g \in G}{\text{arg\,min}} \,\, \mathcal{L}(f, g, \pi_x) + \Omega(g)
+    \end{equation}
     \item \textbf{GradCAM}: Uses the gradients of the target concept flowing into the final convolutional layer.
 \end{itemize}
 For ProtoPNet, we extract its \textbf{Internal Spatial Heatmap}. The similarity $sim(\mathbf{z}, \mathbf{p}_j)$ between a latent convolutional patch $\mathbf{z}$ and a learned prototype $\mathbf{p}_j$ is computed via inverted $L^2$ distance:
