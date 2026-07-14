@@ -43,80 +43,92 @@
 \end{frame}
 
 \begin{frame}{Mathematical Foundations: XAI Methods}
-    \begin{block}{ProtoPNet Similarity}
-        \vspace{-0.4cm}
-        {\small
-        \begin{equation*}
-        sim = \log\left(\frac{d^2 + 1}{d^2 + \epsilon}\right)
-        \end{equation*}
-        }
-    \end{block}
     \begin{block}{SHAP (Shapley Values)}
         \vspace{-0.4cm}
-        {\small
-        \begin{equation*}
+        \begin{center}
+        \resizebox{0.95\linewidth}{!}{
+        \begin{math}
         \phi_i = \sum_{S} \frac{|S|! (n - |S| - 1)!}{n!} \Delta v
-        \end{equation*}
+        \end{math}
         }
+        \end{center}
     \end{block}
     \begin{block}{LIME (Local Surrogate)}
         \vspace{-0.4cm}
-        {\small
-        \begin{equation*}
+        \begin{center}
+        \resizebox{0.5\linewidth}{!}{
+        \begin{math}
         \xi(x) = \underset{g \in G}{\text{arg\,min}} \,\, \mathcal{L} + \Omega(g)
-        \end{equation*}
+        \end{math}
         }
+        \end{center}
     \end{block}
     \begin{block}{GradCAM}
         \vspace{-0.4cm}
-        {\small
-        \begin{equation*}
+        \begin{center}
+        \resizebox{0.6\linewidth}{!}{
+        \begin{math}
         L_{Grad-CAM}^c = ReLU \left( \sum_k \alpha_k^c A^k \right)
-        \end{equation*}
+        \end{math}
         }
+        \end{center}
+    \end{block}
+    \begin{block}{ProtoPNet Similarity}
+        \vspace{-0.4cm}
+        \begin{center}
+        \resizebox{0.5\linewidth}{!}{
+        \begin{math}
+        sim = \log\left(\frac{d^2 + 1}{d^2 + \epsilon}\right)
+        \end{math}
+        }
+        \end{center}
     \end{block}
 \end{frame}
 
 \begin{frame}{Mathematical Foundations: Metrics}
     \begin{block}{Infidelity}
         \vspace{-0.4cm}
-        {\small
-        \begin{equation*}
+        \begin{center}
+        \resizebox{0.95\linewidth}{!}{
+        \begin{math}
         INFD = \mathbb{E}_{I} \left[ \left( f(x) - f(x - I) - I^T \Phi(x) \right)^2 \right]
-        \end{equation*}
+        \end{math}
         }
+        \end{center}
     \end{block}
     \begin{block}{Complexity (Entropy)}
         \vspace{-0.4cm}
-        {\small
-        \begin{equation*}
+        \begin{center}
+        \resizebox{0.4\linewidth}{!}{
+        \begin{math}
         C(\Phi) = - \sum_i p_i \ln(p_i)
-        \end{equation*}
+        \end{math}
         }
+        \end{center}
     \end{block}
     \begin{block}{Localization (IoU)}
         \vspace{-0.4cm}
-        {\small
-        \begin{equation*}
+        \begin{center}
+        \resizebox{0.3\linewidth}{!}{
+        \begin{math}
         Loc = \frac{|M \cap B|}{|M \cup B|}
-        \end{equation*}
+        \end{math}
         }
+        \end{center}
     \end{block}
     \begin{block}{Rank Agreement (Spearman)}
         \vspace{-0.4cm}
-        {\small
-        \begin{equation*}
+        \begin{center}
+        \resizebox{0.4\linewidth}{!}{
+        \begin{math}
         \rho = 1 - \frac{6 \sum d_i^2}{n(n^2 - 1)}
-        \end{equation*}
+        \end{math}
         }
+        \end{center}
     \end{block}
 \end{frame}
 
 \begin{frame}{Experimental Setup \& Metrics}
-    \textbf{Datasets}: \textit{CLE4EVR} (3D objects) and \textit{MNMath} (Handwritten equations). \\
-    \textbf{Key Metrics}: \textit{Infidelity}, \textit{Complexity}, \textit{Localization}.
-    
-    \vspace{0.3cm}
     \begin{columns}
         \begin{column}{0.5\textwidth}
             \begin{center}
@@ -131,6 +143,13 @@
             \end{center}
         \end{column}
     \end{columns}
+    \vspace{0.2cm}
+    \begin{center}
+        {\small
+        \textbf{Datasets}: \textit{CLE4EVR} (3D objects) and \textit{MNMath} (Handwritten equations). \\
+        \textbf{Key Metrics}: \textit{Infidelity}, \textit{Complexity}, \textit{Localization}.
+        }
+    \end{center}
 \end{frame}
 
 \begin{frame}{Post-Hoc Methods on CLE4EVR Dataset}
@@ -147,6 +166,7 @@
         \item \textbf{LIME} underperforms: default SLIC superpixels severely fragment the smooth 3D shapes.
     \end{itemize}
 \end{frame}
+
 
 \begin{frame}{LIME Ablation Study on CLE4EVR}
     \begin{columns}
@@ -214,23 +234,57 @@
     \small{\textbf{ProtoPNet} reasoning encompasses the whole digit and its context, completely ignoring the strict "stroke" pixels favored by SHAP.}
 \end{frame}
 
-\begin{frame}{Rank Agreement: Total Disagreement}
+\begin{frame}{Rank Agreement: CLE4EVR Dataset}
     \begin{itemize}
-        \item Rank correlation is \textbf{negative} (-0.09 for CLE4EVR, -0.24 for MNMath).
-        \item Post-hoc methods provide edge-aligned explanations but misrepresent the actual broad spatial reasoning of the network!
+        \item Correlation between Spatial Locality (Intersection) and Infidelity.
+        \item Across all architectures, post-hoc rank correlation is \textbf{near zero or negative}.
     \end{itemize}
-    \vspace{0.2cm}
+    \vspace{0.1cm}
     \begin{columns}
-        \begin{column}{0.5\textwidth}
+        \begin{column}{0.33\textwidth}
             \begin{center}
-                \textbf{CLE4EVR} \\
-                \includegraphics[width=0.8\textwidth, height=0.5\textheight, keepaspectratio]{explanations/protopnet_cle4evr_agreement_heatmap.png}
+                \textbf{ResNet50} \\
+                \includegraphics[width=0.9\textwidth, height=0.45\textheight, keepaspectratio]{explanations/resnet50_cle4evr_agreement_heatmap.png}
             \end{center}
         \end{column}
-        \begin{column}{0.5\textwidth}
+        \begin{column}{0.33\textwidth}
             \begin{center}
-                \textbf{MNMath} \\
-                \includegraphics[width=0.8\textwidth, height=0.5\textheight, keepaspectratio]{explanations/protopnet_mnmath_agreement_heatmap.png}
+                \textbf{ViT} \\
+                \includegraphics[width=0.9\textwidth, height=0.45\textheight, keepaspectratio]{explanations/vit_cle4evr_agreement_heatmap.png}
+            \end{center}
+        \end{column}
+        \begin{column}{0.33\textwidth}
+            \begin{center}
+                \textbf{ProtoPNet} \\
+                \includegraphics[width=0.9\textwidth, height=0.45\textheight, keepaspectratio]{explanations/protopnet_cle4evr_agreement_heatmap.png}
+            \end{center}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Rank Agreement: MNMath Dataset}
+    \begin{itemize}
+        \item The disconnect is even worse on fine-grained data (-0.24 for ProtoPNet).
+        \item Post-hoc methods misrepresent the actual broad spatial reasoning of the network!
+    \end{itemize}
+    \vspace{0.1cm}
+    \begin{columns}
+        \begin{column}{0.33\textwidth}
+            \begin{center}
+                \textbf{ResNet50} \\
+                \includegraphics[width=0.9\textwidth, height=0.45\textheight, keepaspectratio]{explanations/resnet50_mnmath_agreement_heatmap.png}
+            \end{center}
+        \end{column}
+        \begin{column}{0.33\textwidth}
+            \begin{center}
+                \textbf{ViT} \\
+                \includegraphics[width=0.9\textwidth, height=0.45\textheight, keepaspectratio]{explanations/vit_mnmath_agreement_heatmap.png}
+            \end{center}
+        \end{column}
+        \begin{column}{0.33\textwidth}
+            \begin{center}
+                \textbf{ProtoPNet} \\
+                \includegraphics[width=0.9\textwidth, height=0.45\textheight, keepaspectratio]{explanations/protopnet_mnmath_agreement_heatmap.png}
             \end{center}
         \end{column}
     \end{columns}
