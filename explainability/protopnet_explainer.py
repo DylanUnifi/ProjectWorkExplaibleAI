@@ -26,5 +26,7 @@ class ProtoPNetExplainer:
         
         with torch.no_grad():
             heatmaps = self.protopnet.generate_explanation(images, class_idx=target_classes)
+            if heatmaps.dim() == 3:
+                heatmaps = heatmaps.unsqueeze(1)
             
         return heatmaps
