@@ -9,6 +9,8 @@ from dataset import get_cle4evr_loaders, get_mnmath_loaders
 from model import ResNet50Classifier, ViTClassifier, ProtoPNet, HybridQCNNClassifier, HybridQViT
 from explainability.shap_explainer import SHAPExplainer
 from explainability.lime_explainer import LIMEExplainer
+from explainability.gradcam_explainer import GradCAMExplainer
+from explainability.rollout_explainer import RolloutExplainer
 from explainability.metrics import XAIMetrics
 from explainability.advanced_metrics import ComparativeXAIMetrics
 
@@ -90,28 +92,36 @@ def main():
         print("ProtoPNet is self-explaining! No post-hoc explainer needed.")
         return
 
-    print("Running SHAP and LIME Explainers...")
+    print("Initializing Explainers...")
     wrapped_model = ModelWrapper(model)
-    shap_explainer = SHAPExplainer(wrapped_model, train_loader, method="gradient")
-    lime_explainer = LIMEExplainer(wrapped_model, n_classes=n_classes, mean=mean, std=std)
     metrics_calc = XAIMetrics(wrapped_model, args.device)
     
-    # Initialize accumulators
-    avg_metrics = {
-        "shap_infidelity": 0.0,
-        "lime_infidelity": 0.0,
-        "shap_vs_lime_rank_corr": 0.0,
-        "shap_vs_lime_top_k_overlap": 0.0,
-        "shap_complexity": 0.0,
-        "lime_complexity": 0.0
+    explainers = {
+        "SHAP": SHAPExplainer(wrapped_model, train_loader, method="gradient"),
+        "LIME": LIMEExplainer(wrapped_model, n_classes=n_classes, mean=mean, std=std)
     }
+    
+    # Dynamically add architecture-specific explainers
+    if hasattr(model, 'generate_gradcam'):
+        print("Model supports GradCAM. Adding GradCAMExplainer...")
+        explainers["GradCAM"] = GradCAMExplainer(wrapped_model)
+    if hasattr(model, 'attention_rollout'):
+        print("Model supports Attention Rollout. Adding RolloutExplainer...")
+        explainers["Rollout"] = RolloutExplainer(wrapped_model)
+        
+    # Initialize accumulators dynamically based on active explainers
+    avg_metrics = {}
+    for name in explainers.keys():
+        avg_metrics[f"{name.lower()}_infidelity"] = 0.0
+        avg_metrics[f"{name.lower()}_complexity"] = 0.0
+        
+    avg_metrics["rank_corr_shap_vs_lime"] = 0.0
+    avg_metrics["top_k_overlap_shap_vs_lime"] = 0.0
+    
     num_batches = 0
     
     summary_dict = {
-        args.model: {
-            "SHAP": [],
-            "LIME": []
-        }
+        args.model: {name: [] for name in explainers.keys()}
     }
     all_comparison_matrices = []
 
@@ -121,56 +131,54 @@ def main():
         # For evaluation, take the first label if there are multiple equations
         eval_labels = labels[:, 0] if labels.dim() > 1 else labels
         
-        # Get explanations
-        shap_attrs = shap_explainer.explain(images, eval_labels)
-        lime_attrs = lime_explainer.explain(images, eval_labels)
+        # Get explanations dynamically
+        explanations_dict = {}
+        batch_log_metrics = {}
         
-        # Calculate infidelity
-        shap_infidelity = metrics_calc.infidelity(images, shap_attrs, eval_labels, n_samples=10)
-        lime_infidelity = metrics_calc.infidelity(images, lime_attrs, eval_labels, n_samples=10)
+        for name, explainer in explainers.items():
+            attrs = explainer.explain(images, eval_labels)
+            explanations_dict[name] = attrs
+            
+            # Calculate metrics
+            infid = metrics_calc.infidelity(images, attrs, eval_labels, n_samples=10)
+            comp = ComparativeXAIMetrics.explanation_complexity(attrs)
+            
+            summary_dict[args.model][name].append({"infidelity": infid, "complexity": comp})
+            
+            batch_log_metrics[f"{name.lower()}_infidelity"] = infid
+            batch_log_metrics[f"{name.lower()}_complexity"] = comp
+            
+            avg_metrics[f"{name.lower()}_infidelity"] += infid
+            avg_metrics[f"{name.lower()}_complexity"] += comp
+            
+        # Hardcoded SHAP vs LIME for continuity
+        rank_corr = ComparativeXAIMetrics.rank_agreement(explanations_dict["SHAP"], explanations_dict["LIME"], method="spearman")
+        top_k_over = ComparativeXAIMetrics.top_k_overlap(explanations_dict["SHAP"], explanations_dict["LIME"], k=100)
         
-        # Calculate advanced metrics
-        rank_corr = ComparativeXAIMetrics.rank_agreement(shap_attrs, lime_attrs, method="spearman")
-        top_k_over = ComparativeXAIMetrics.top_k_overlap(shap_attrs, lime_attrs, k=100)
-        shap_complexity = ComparativeXAIMetrics.explanation_complexity(shap_attrs)
-        lime_complexity = ComparativeXAIMetrics.explanation_complexity(lime_attrs)
+        batch_log_metrics["rank_corr_shap_vs_lime"] = rank_corr
+        batch_log_metrics["top_k_overlap_shap_vs_lime"] = top_k_over
+        avg_metrics["rank_corr_shap_vs_lime"] += rank_corr
+        avg_metrics["top_k_overlap_shap_vs_lime"] += top_k_over
         
-        summary_dict[args.model]["SHAP"].append({"infidelity": shap_infidelity, "complexity": shap_complexity})
-        summary_dict[args.model]["LIME"].append({"infidelity": lime_infidelity, "complexity": lime_complexity})
-        
-        # Accumulate matrix
-        explanations_dict = {"SHAP": shap_attrs, "LIME": lime_attrs}
+        # Matrix over ALL methods
         comparison_matrix, methods = ComparativeXAIMetrics.compare_all_methods(explanations_dict, metrics_to_compute=["rank_agreement"])
         all_comparison_matrices.append(comparison_matrix["rank_agreement"])
         
-        wandb.log({
-            "shap_infidelity": shap_infidelity, 
-            "lime_infidelity": lime_infidelity,
-            "shap_vs_lime_rank_corr": rank_corr,
-            "shap_vs_lime_top_k_overlap": top_k_over,
-            "shap_complexity": shap_complexity,
-            "lime_complexity": lime_complexity
-        })
+        wandb.log(batch_log_metrics)
         
         import os
         os.makedirs("explanations", exist_ok=True)
         save_path = f"explanations/{args.model}_{args.dataset}_batch_{i}_grid.png"
         
         # Visualize first image in batch using comparison grid
+        first_img_attrs = {name: attrs[0] for name, attrs in explanations_dict.items()}
         plot_comparison_grid(
             images[0],
-            {args.model: {"SHAP": shap_attrs[0], "LIME": lime_attrs[0]}},
+            {args.model: first_img_attrs},
             save_path=save_path
         )
         wandb.log({f"Explanation_Batch_{i}": wandb.Image(save_path)})
         
-        # Accumulate for average
-        avg_metrics["shap_infidelity"] += shap_infidelity
-        avg_metrics["lime_infidelity"] += lime_infidelity
-        avg_metrics["shap_vs_lime_rank_corr"] += rank_corr
-        avg_metrics["shap_vs_lime_top_k_overlap"] += top_k_over
-        avg_metrics["shap_complexity"] += shap_complexity
-        avg_metrics["lime_complexity"] += lime_complexity
         num_batches += 1
 
     # Print final averages
