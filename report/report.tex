@@ -35,7 +35,7 @@ Explainable AI, XAI, Deep Learning, ProtoPNet, SHAP, LIME, GradCAM, Computer Vis
 \section{Introduction}
 The rapid advancement of deep neural networks in computer vision has led to unprecedented accuracy but at the cost of transparency. Convolutional Neural Networks (CNNs) like ResNet \cite{he2016deep} and Vision Transformers (ViTs) \cite{dosovitskiy2020image} are widely considered ``black boxes.'' To mitigate this, post-hoc Explainable AI (XAI) methods such as SHAP \cite{lundberg2017unified}, LIME \cite{ribeiro2016should}, and GradCAM \cite{selvaraju2017grad} have been developed to highlight important input features. 
 
-However, post-hoc methods have been criticized for their lack of fidelity and potential to generate misleading explanations. As an alternative, intrinsically interpretable models like the Prototypical Part Network (ProtoPNet) \cite{chen2019this} incorporate interpretability directly into the architecture by dissecting images into prototypes.
+However, post-hoc methods have been criticized for their lack of fidelity and potential to generate misleading explanations \cite{adebayo2018sanity, yeh2019fidelity}. As an alternative, intrinsically interpretable models like the Prototypical Part Network (ProtoPNet) \cite{chen2019this} incorporate interpretability directly into the architecture by dissecting images into prototypes.
 
 This study systematically compares post-hoc XAI methods against intrinsic interpretability. We pose the following research questions:
 \begin{itemize}
@@ -49,7 +49,7 @@ This study systematically compares post-hoc XAI methods against intrinsic interp
 \subsection{Datasets}
 We utilized two custom visual datasets with varying characteristics:
 \begin{itemize}
-    \item \textbf{CLE4EVR}: A dataset composed of 3D objects (spheres, cubes, cylinders) rendered with diverse colors and materials. It tests the models' ability to localize large, well-defined objects in a 3D scene.
+    \item \textbf{CLE4EVR}: A dataset composed of 3D objects (spheres, cubes, cylinders) rendered with diverse colors and materials (inspired by CLEVR-Hans \cite{stammer2021right}). It tests the models' ability to localize large, well-defined objects in a 3D scene.
     \item \textbf{MNMath}: A dataset containing handwritten mathematical equations. It challenges the models with fine-grained, high-contrast, stroke-based features.
 \end{itemize}
 
@@ -71,7 +71,7 @@ The comparative pipeline evaluates three post-hoc methods:
 For ProtoPNet, we extract its \textbf{Internal Spatial Heatmap}. By converting the prototype $L^2$ distances into similarity scores and weighting them by the final classification layer, we reconstruct the exact spatial map the network used to make its decision.
 
 \section{Evaluation Metrics}
-To ensure a fair and rigorous comparison, we implemented a custom XAI metric suite:
+To ensure a fair and rigorous comparison, we implemented a custom XAI metric suite based on foundational explanation validation techniques \cite{yeh2019fidelity}:
 \begin{itemize}
     \item \textbf{Infidelity}: Measures how the model's prediction changes when important pixels (according to the explanation) are perturbed. Lower is better.
     \item \textbf{Complexity}: The fraction of pixels deemed "important" (above a threshold). Lower complexity implies a sparser, more concise explanation.
