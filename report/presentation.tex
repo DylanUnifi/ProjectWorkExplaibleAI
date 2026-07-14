@@ -45,85 +45,73 @@
 \end{frame}
 
 \begin{frame}{Mathematical Foundations: XAI Methods}
-    \begin{columns}
-        \begin{column}{0.5\textwidth}
-            \begin{block}{ProtoPNet Similarity}
-                \vspace{-0.2cm}
-                {\small
-                \begin{equation*}
-                sim = \log\left(\frac{d^2 + 1}{d^2 + \epsilon}\right)
-                \end{equation*}
-                }
-            \end{block}
-            \begin{block}{SHAP (Shapley Values)}
-                \vspace{-0.2cm}
-                {\small
-                \begin{equation*}
-                \phi_i = \sum_{S} \frac{|S|! (n - |S| - 1)!}{n!} \Delta v
-                \end{equation*}
-                }
-            \end{block}
-        \end{column}
-        \begin{column}{0.5\textwidth}
-            \begin{block}{LIME (Local Surrogate)}
-                \vspace{-0.2cm}
-                {\small
-                \begin{equation*}
-                \xi(x) = \underset{g \in G}{\text{arg\,min}} \,\, \mathcal{L} + \Omega(g)
-                \end{equation*}
-                }
-            \end{block}
-            \begin{block}{GradCAM}
-                \vspace{-0.2cm}
-                {\small
-                \begin{equation*}
-                L_{Grad-CAM}^c = ReLU \left( \sum_k \alpha_k^c A^k \right)
-                \end{equation*}
-                }
-            \end{block}
-        \end{column}
-    \end{columns}
+    \begin{block}{ProtoPNet Similarity}
+        \vspace{-0.4cm}
+        {\small
+        \begin{equation*}
+        sim = \log\left(\frac{d^2 + 1}{d^2 + \epsilon}\right)
+        \end{equation*}
+        }
+    \end{block}
+    \begin{block}{SHAP (Shapley Values)}
+        \vspace{-0.4cm}
+        {\small
+        \begin{equation*}
+        \phi_i = \sum_{S} \frac{|S|! (n - |S| - 1)!}{n!} \Delta v
+        \end{equation*}
+        }
+    \end{block}
+    \begin{block}{LIME (Local Surrogate)}
+        \vspace{-0.4cm}
+        {\small
+        \begin{equation*}
+        \xi(x) = \underset{g \in G}{\text{arg\,min}} \,\, \mathcal{L} + \Omega(g)
+        \end{equation*}
+        }
+    \end{block}
+    \begin{block}{GradCAM}
+        \vspace{-0.4cm}
+        {\small
+        \begin{equation*}
+        L_{Grad-CAM}^c = ReLU \left( \sum_k \alpha_k^c A^k \right)
+        \end{equation*}
+        }
+    \end{block}
 \end{frame}
 
 \begin{frame}{Mathematical Foundations: Metrics}
-    \begin{columns}
-        \begin{column}{0.5\textwidth}
-            \begin{block}{Infidelity}
-                \vspace{-0.2cm}
-                {\small
-                \begin{equation*}
-                INFD = \mathbb{E}_{I} \left[ \left( f(x) - f(x - I) - I^T \Phi(x) \right)^2 \right]
-                \end{equation*}
-                }
-            \end{block}
-            \begin{block}{Complexity (Entropy)}
-                \vspace{-0.2cm}
-                {\small
-                \begin{equation*}
-                C(\Phi) = - \sum_i p_i \ln(p_i)
-                \end{equation*}
-                }
-            \end{block}
-        \end{column}
-        \begin{column}{0.5\textwidth}
-            \begin{block}{Localization (IoU)}
-                \vspace{-0.2cm}
-                {\small
-                \begin{equation*}
-                Loc = \frac{|M \cap B|}{|M \cup B|}
-                \end{equation*}
-                }
-            \end{block}
-            \begin{block}{Rank Agreement (Spearman)}
-                \vspace{-0.2cm}
-                {\small
-                \begin{equation*}
-                \rho = 1 - \frac{6 \sum d_i^2}{n(n^2 - 1)}
-                \end{equation*}
-                }
-            \end{block}
-        \end{column}
-    \end{columns}
+    \begin{block}{Infidelity}
+        \vspace{-0.4cm}
+        {\small
+        \begin{equation*}
+        INFD = \mathbb{E}_{I} \left[ \left( f(x) - f(x - I) - I^T \Phi(x) \right)^2 \right]
+        \end{equation*}
+        }
+    \end{block}
+    \begin{block}{Complexity (Entropy)}
+        \vspace{-0.4cm}
+        {\small
+        \begin{equation*}
+        C(\Phi) = - \sum_i p_i \ln(p_i)
+        \end{equation*}
+        }
+    \end{block}
+    \begin{block}{Localization (IoU)}
+        \vspace{-0.4cm}
+        {\small
+        \begin{equation*}
+        Loc = \frac{|M \cap B|}{|M \cup B|}
+        \end{equation*}
+        }
+    \end{block}
+    \begin{block}{Rank Agreement (Spearman)}
+        \vspace{-0.4cm}
+        {\small
+        \begin{equation*}
+        \rho = 1 - \frac{6 \sum d_i^2}{n(n^2 - 1)}
+        \end{equation*}
+        }
+    \end{block}
 \end{frame}
 
 \begin{frame}{Experimental Setup \& Metrics}
