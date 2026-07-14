@@ -37,11 +37,9 @@
     \vspace{0.2cm}
     \begin{itemize}
         \item Deep learning models (CNNs, ViTs) have opaque decision-making processes.
-        \item \textbf{Post-Hoc XAI}: Explainers applied \textit{after} training (e.g., \textbf{SHAP}, \textbf{LIME}).
-        \item \textbf{Intrinsic XAI}: Models interpretable by design (e.g., \textbf{ProtoPNet}).
+        \item \textbf{Post-Hoc XAI}: Explainers applied \textit{after} training (e.g., \textbf{SHAP} \cite{lundberg2017unified}, \textbf{LIME} \cite{ribeiro2016should}).
+        \item \textbf{Intrinsic XAI}: Models interpretable by design (e.g., \textbf{ProtoPNet} \cite{chen2019this}).
     \end{itemize}
-    \vspace{0.4cm}
-    {\tiny \textit{References: Lundberg \& Lee (SHAP), NeurIPS 2017 \quad | \quad Ribeiro et al. (LIME), KDD 2016 \quad | \quad Chen et al. (ProtoPNet), NeurIPS 2019}}
 \end{frame}
 
 \begin{frame}{Mathematical Foundations: XAI Methods}
@@ -115,28 +113,21 @@
 \end{frame}
 
 \begin{frame}{Experimental Setup \& Metrics}
+    \textbf{Datasets}: \textit{CLE4EVR} (3D objects) and \textit{MNMath} (Handwritten equations). \\
+    \textbf{Key Metrics}: \textit{Infidelity}, \textit{Complexity}, \textit{Localization}.
+    
+    \vspace{0.3cm}
     \begin{columns}
-        \begin{column}{0.4\textwidth}
-            \textbf{Datasets}
-            \begin{itemize}
-                \item \textit{CLE4EVR}: 3D rendered objects.
-                \item \textit{MNMath}: Handwritten equations.
-            \end{itemize}
-            \vspace{0.3cm}
-            \textbf{Key Metrics}
-            \begin{itemize}
-                \item \textit{Infidelity}
-                \item \textit{Complexity}
-                \item \textit{Localization}
-            \end{itemize}
-        \end{column}
-        \begin{column}{0.6\textwidth}
+        \begin{column}{0.5\textwidth}
             \begin{center}
                 \textbf{Post-Hoc Metrics} \\
-                \includegraphics[width=0.8\textwidth, height=0.35\textheight, keepaspectratio]{explanations/resnet50_cle4evr_metrics_comparison.png} \\
-                \vspace{0.1cm}
+                \includegraphics[width=0.9\textwidth, height=0.5\textheight, keepaspectratio]{explanations/resnet50_cle4evr_metrics_comparison.png}
+            \end{center}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{center}
                 \textbf{Intrinsic Metrics} \\
-                \includegraphics[width=0.8\textwidth, height=0.35\textheight, keepaspectratio]{explanations/protopnet_cle4evr_metrics_comparison.png}
+                \includegraphics[width=0.9\textwidth, height=0.5\textheight, keepaspectratio]{explanations/protopnet_cle4evr_metrics_comparison.png}
             \end{center}
         \end{column}
     \end{columns}
@@ -224,21 +215,22 @@
 \end{frame}
 
 \begin{frame}{Rank Agreement: Total Disagreement}
+    \begin{itemize}
+        \item Rank correlation is \textbf{negative} (-0.09 for CLE4EVR, -0.24 for MNMath).
+        \item Post-hoc methods provide edge-aligned explanations but misrepresent the actual broad spatial reasoning of the network!
+    \end{itemize}
+    \vspace{0.2cm}
     \begin{columns}
-        \begin{column}{0.5\textwidth}
-            \begin{itemize}
-                \item Rank correlation is \textbf{negative} (-0.09 for CLE4EVR, -0.24 for MNMath).
-                \item Post-hoc methods provide edge-aligned explanations...
-                \item ...but they misrepresent the actual broad spatial reasoning of the network!
-            \end{itemize}
-        \end{column}
         \begin{column}{0.5\textwidth}
             \begin{center}
                 \textbf{CLE4EVR} \\
-                \includegraphics[width=0.7\textwidth, height=0.4\textheight, keepaspectratio]{explanations/protopnet_cle4evr_agreement_heatmap.png} \\
-                \vspace{0.1cm}
+                \includegraphics[width=0.8\textwidth, height=0.5\textheight, keepaspectratio]{explanations/protopnet_cle4evr_agreement_heatmap.png}
+            \end{center}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{center}
                 \textbf{MNMath} \\
-                \includegraphics[width=0.7\textwidth, height=0.4\textheight, keepaspectratio]{explanations/protopnet_mnmath_agreement_heatmap.png}
+                \includegraphics[width=0.8\textwidth, height=0.5\textheight, keepaspectratio]{explanations/protopnet_mnmath_agreement_heatmap.png}
             \end{center}
         \end{column}
     \end{columns}
@@ -248,7 +240,7 @@
     \begin{block}{Key Takeaways}
         \begin{itemize}
             \item Relying strictly on "Localization Accuracy" is dangerous: it assumes networks reason using human-defined object boundaries.
-            \item Intrinsic interpretability reveals that models learn broad spatial contexts, unlike what post-hoc methods suggest.
+            \item Intrinsic interpretability reveals that models learn broad spatial contexts, unlike what post-hoc methods suggest \cite{rudin2019stop}.
         \end{itemize}
     \end{block}
     \begin{center}
@@ -256,8 +248,11 @@
         \Huge Thank You! \\
         \large Questions?
     \end{center}
-    \vspace{0.4cm}
-    {\tiny \textit{Reference: Rudin, C. "Stop explaining black box machine learning models for high stakes decisions and use interpretable models instead." Nature Machine Intelligence (2019).}}
+\end{frame}
+
+\begin{frame}[allowframebreaks]{References}
+    \bibliographystyle{IEEEtran}
+    \bibliography{references}
 \end{frame}
 
 \end{document}
