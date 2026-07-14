@@ -77,12 +77,23 @@
 \end{frame}
 
 \begin{frame}{Results: Post-Hoc on Classical Backbones}
-    \begin{center}
-        % Remplacer par une image montrant SHAP/LIME sur ResNet
-        \includegraphics[width=0.8\textwidth, height=0.7\textheight, keepaspectratio]{explanations/vit_cle4evr_batch_0_grid.png}
-    \end{center}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \begin{center}
+                \textbf{ResNet50 on CLE4EVR} \\
+                \includegraphics[width=\textwidth]{explanations/resnet50_cle4evr_batch_0_grid.png}
+            \end{center}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{center}
+                \textbf{ViT on MNMath} \\
+                \includegraphics[width=\textwidth]{explanations/vit_mnmath_batch_0_grid.png}
+            \end{center}
+        \end{column}
+    \end{columns}
+    \vspace{0.2cm}
     \begin{itemize}
-        \item \textbf{GradCAM} excels on large 3D objects (CLE4EVR) but fails on fine strokes (MNMath).
+        \item \textbf{GradCAM} excels on large 3D objects but fails on fine strokes.
         \item \textbf{LIME} struggles with default superpixels on large objects (fragmentation).
     \end{itemize}
 \end{frame}
@@ -109,16 +120,23 @@
 
 \begin{frame}{Rank Agreement: Total Disagreement}
     \begin{columns}
-        \begin{column}{0.5\textwidth}
+        \begin{column}{0.4\textwidth}
             \begin{itemize}
-                \item Rank correlation between SHAP and ProtoPNet Internal is \textbf{negative} (e.g. -0.24).
-                \item Post-hoc methods provide neat, edge-aligned explanations that look good to humans...
+                \item Rank correlation is \textbf{negative} (-0.09 for CLE4EVR, -0.24 for MNMath).
+                \item Post-hoc methods provide edge-aligned explanations...
                 \item ...but they misrepresent the actual broad spatial reasoning of the network!
             \end{itemize}
         \end{column}
-        \begin{column}{0.5\textwidth}
+        \begin{column}{0.3\textwidth}
             \begin{center}
-                \includegraphics[width=\textwidth, height=0.7\textheight, keepaspectratio]{explanations/protopnet_cle4evr_agreement_heatmap.png}
+                \textbf{CLE4EVR} \\
+                \includegraphics[width=\textwidth]{explanations/protopnet_cle4evr_agreement_heatmap.png}
+            \end{center}
+        \end{column}
+        \begin{column}{0.3\textwidth}
+            \begin{center}
+                \textbf{MNMath} \\
+                \includegraphics[width=\textwidth]{explanations/protopnet_mnmath_agreement_heatmap.png}
             \end{center}
         \end{column}
     \end{columns}
