@@ -162,7 +162,7 @@ When evaluating ResNet50 and ViT, the post-hoc methods exhibited strong dependen
 \end{figure*}
 
 \begin{itemize}
-    \item \textbf{MNMath (Fine-grained)}: SHAP significantly outperformed GradCAM. GradCAM's low spatial resolution (e.g., $7 \times 7$ feature maps) caused its heatmaps to blur over the fine strokes of the digits, resulting in poor localization.
+    \item \textbf{MNMath (Fine-grained)}: SHAP significantly outperformed GradCAM. GradCAM's low spatial resolution (e.g., $7 \times 7$ feature maps) caused its heatmaps to blur over the fine strokes of the digits, resulting in poor localization. LIME also struggled to isolate thin strokes, as its superpixels tend to group the white background with the fine handwritten details.
     \item \textbf{CLE4EVR (Large Objects)}: GradCAM rebounded, performing on par with SHAP. The large 3D objects perfectly matched the scale of GradCAM's receptive field. LIME severely underperformed due to its default SLIC superpixel segmentation, which fragmented the smooth 3D objects.
 \end{itemize}
 
