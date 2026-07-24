@@ -81,7 +81,7 @@ def main():
         in_channels = 3
         mean = [0.485, 0.456, 0.406]
         std = [0.229, 0.224, 0.225]
-        target_lime_segments = 15  # CLEVR has around 3-10 large objects
+        target_lime_segments = 4  # CLEVR ablation uses K=4
     else:
         train_loader, _, test_loader, num_equations, num_concepts = get_mnmath_loaders(batch_size=args.batch_size, max_samples=args.max_samples)
         n_classes = 19
@@ -97,7 +97,7 @@ def main():
     wrapped_model = ModelWrapper(model)
     metrics_calc = XAIMetrics(wrapped_model, args.device)
     
-    lime_n_segments = target_lime_segments if args.lime_ablation else 200
+    lime_n_segments = target_lime_segments if args.lime_ablation else 50
     if args.lime_ablation:
         print(f"*** LIME Ablation Mode: Using {lime_n_segments} segments to match object size ***")
         
@@ -201,7 +201,10 @@ def main():
         
         import os
         os.makedirs("explanations", exist_ok=True)
-        save_path = f"explanations/{args.model}_{args.dataset}_batch_{i}_grid.png"
+        if args.lime_ablation:
+            save_path = f"explanations/{args.model}_{args.dataset}_lime_k4_grid.png"
+        else:
+            save_path = f"explanations/{args.model}_{args.dataset}_lime_k50_grid.png"
         
         # Visualize first image in batch using comparison grid
         first_img_attrs = {name: attrs[0] for name, attrs in explanations_dict.items()}
@@ -234,12 +237,14 @@ def main():
         # 1. Plot Agreement Heatmap
         if all_comparison_matrices:
             avg_matrix = np.mean(all_comparison_matrices, axis=0)
-            heatmap_path = f"explanations/{args.model}_{args.dataset}_agreement_heatmap.png"
+            suffix = "_lime_k4" if args.lime_ablation else ""
+            heatmap_path = f"explanations/{args.model}_{args.dataset}{suffix}_agreement_heatmap.png"
             plot_agreement_heatmap(avg_matrix, methods, save_path=heatmap_path)
             wandb.log({"Agreement_Heatmap": wandb.Image(heatmap_path)})
         
         # 2. Plot Metrics Comparison
-        metrics_plot_path = f"explanations/{args.model}_{args.dataset}_metrics_comparison.png"
+        suffix = "_lime_k4" if args.lime_ablation else ""
+        metrics_plot_path = f"explanations/{args.model}_{args.dataset}{suffix}_metrics_comparison.png"
         plot_metrics_comparison(summary_dict, save_path=metrics_plot_path)
         wandb.log({"Metrics_Comparison": wandb.Image(metrics_plot_path)})
 
