@@ -128,21 +128,21 @@ When evaluating ResNet50 and ViT, the post-hoc methods exhibited strong dependen
 \hline
 \textbf{Dataset} & \textbf{Model} & \textbf{Explainer} & \textbf{Infidelity $\downarrow$} & \textbf{Complexity $\downarrow$} \\
 \hline
-\multirow{6}{*}{CLE4EVR} & \multirow{3}{*}{ResNet50} & SHAP & [XX.X] & \textbf{[X.XXX]} \\
-& & GradCAM & \textbf{[XX.X]} & [X.XXX] \\
-& & LIME & [XX.X] & [X.XXX] \\
+\multirow{6}{*}{CLE4EVR} & \multirow{3}{*}{ResNet50} & SHAP & \textbf{5.158} & \textbf{0.007} \\
+& & GradCAM & 6.021 & 0.453 \\
+& & LIME & 22.782 & 0.831 \\
 \cline{2-5}
-& \multirow{3}{*}{ViT} & SHAP & [XX.X] & \textbf{[X.XXX]} \\
-& & Rollout & [XX.X] & [X.XXX] \\
-& & LIME & [XX.X] & [X.XXX] \\
+& \multirow{3}{*}{ViT} & SHAP & \textbf{0.068} & \textbf{0.002} \\
+& & Rollout & 0.134 & 0.087 \\
+& & LIME & 17.745 & 0.498 \\
 \hline
-\multirow{6}{*}{MNMath} & \multirow{3}{*}{ResNet50} & SHAP & \textbf{[XX.X]} & \textbf{[X.XXX]} \\
-& & GradCAM & [XX.X] & [X.XXX] \\
-& & LIME & [XX.X] & [X.XXX] \\
+\multirow{6}{*}{MNMath} & \multirow{3}{*}{ResNet50} & SHAP & 1.576 & \textbf{0.026} \\
+& & GradCAM & \textbf{1.333} & 0.893 \\
+& & LIME & 1.859 & 0.321 \\
 \cline{2-5}
-& \multirow{3}{*}{ViT} & SHAP & \textbf{[XX.X]} & \textbf{[X.XXX]} \\
-& & Rollout & [XX.X] & [X.XXX] \\
-& & LIME & [XX.X] & [X.XXX] \\
+& \multirow{3}{*}{ViT} & SHAP & \textbf{0.225} & \textbf{0.029} \\
+& & Rollout & 0.228 & 1.000 \\
+& & LIME & 2.656 & 0.321 \\
 \hline
 \end{tabular}
 }

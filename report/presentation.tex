@@ -46,34 +46,18 @@
     \begin{columns}
         \begin{column}{0.48\textwidth}
             \begin{itemize}
-                \item \textbf{SHAP}
-                {\small
-                \begin{equation*}
-                \phi_i = \sum_{S} \frac{|S|! (n - |S| - 1)!}{n!} \Delta v
-                \end{equation*}
-                }
-                \item \textbf{LIME}
-                {\small
-                \begin{equation*}
-                \xi(x) = \underset{g \in G}{\text{arg\,min}} \,\, \mathcal{L} + \Omega(g)
-                \end{equation*}
-                }
+                \item \textbf{SHAP} \\
+                {\small $\phi_i = \sum_{S} \frac{|S|! (n - |S| - 1)!}{n!} \Delta v$}
+                \item \textbf{LIME} \\
+                {\small $\xi(x) = \underset{g \in G}{\text{arg\,min}} \,\, \mathcal{L} + \Omega(g)$}
             \end{itemize}
         \end{column}
         \begin{column}{0.48\textwidth}
             \begin{itemize}
-                \item \textbf{GradCAM}
-                {\small
-                \begin{equation*}
-                L_{\text{Grad-CAM}}^c = \text{ReLU} \left( \sum_k \alpha_k^c A^k \right)
-                \end{equation*}
-                }
-                \item \textbf{ProtoPNet}
-                {\small
-                \begin{equation*}
-                \text{sim} = \log\left(\frac{d^2 + 1}{d^2 + \epsilon}\right)
-                \end{equation*}
-                }
+                \item \textbf{GradCAM} \\
+                {\small $L_{\text{Grad-CAM}}^c = \text{ReLU} \left( \sum_k \alpha_k^c A^k \right)$}
+                \item \textbf{ProtoPNet} \\
+                {\small $\text{sim} = \log\left(\frac{d^2 + 1}{d^2 + \epsilon}\right)$}
             \end{itemize}
         \end{column}
     \end{columns}
@@ -83,34 +67,18 @@
     \begin{columns}
         \begin{column}{0.48\textwidth}
             \begin{itemize}
-                \item \textbf{Infidelity}
-                {\small
-                \begin{equation*}
-                \text{INFD} = \mathbb{E}_{I} \left[ \left( f(x) - f(x - I) - I^T \Phi(x) \right)^2 \right]
-                \end{equation*}
-                }
-                \item \textbf{Complexity (Entropy)}
-                {\small
-                \begin{equation*}
-                C(\Phi) = - \sum_i p_i \ln(p_i)
-                \end{equation*}
-                }
+                \item \textbf{Infidelity} \\
+                {\small $\text{INFD} = \mathbb{E}_{I} \left[ \left( f(x) - f(x - I) - I^T \Phi(x) \right)^2 \right]$}
+                \item \textbf{Complexity (Entropy)} \\
+                {\small $C(\Phi) = - \sum_i p_i \ln(p_i)$}
             \end{itemize}
         \end{column}
         \begin{column}{0.48\textwidth}
             \begin{itemize}
-                \item \textbf{Localization (IoU)}
-                {\small
-                \begin{equation*}
-                \text{Loc} = \frac{|M \cap B|}{|M \cup B|}
-                \end{equation*}
-                }
-                \item \textbf{Rank Agreement (Spearman)}
-                {\small
-                \begin{equation*}
-                \rho = 1 - \frac{6 \sum d_i^2}{n(n^2 - 1)}
-                \end{equation*}
-                }
+                \item \textbf{Localization (IoU)} \\
+                {\small $\text{Loc} = \frac{|M \cap B|}{|M \cup B|}$}
+                \item \textbf{Rank Agreement (Spearman)} \\
+                {\small $\rho = 1 - \frac{6 \sum d_i^2}{n(n^2 - 1)}$}
             \end{itemize}
         \end{column}
     \end{columns}
