@@ -177,6 +177,28 @@
     \end{itemize}
 \end{frame}
 
+\begin{frame}{ProtoPNet Learned Prototypes}
+    \begin{itemize}
+        \item ProtoPNet inherently learns a set of visual \textit{prototypes} directly from the training data.
+        \item Classification is based on the distance between the input image patches and these learned prototypes.
+    \end{itemize}
+    \vspace{0.3cm}
+    \begin{columns}
+        \begin{column}{0.48\textwidth}
+            \begin{center}
+                \textbf{CLE4EVR Prototypes} \\
+                \includegraphics[width=\textwidth, height=0.3\textheight, keepaspectratio]{explanations/protopnet_cle4evr_prototypes.png}
+            \end{center}
+        \end{column}
+        \begin{column}{0.48\textwidth}
+            \begin{center}
+                \textbf{MNMath Prototypes} \\
+                \includegraphics[width=\textwidth, height=0.3\textheight, keepaspectratio]{explanations/protopnet_mnmath_prototypes.png}
+            \end{center}
+        \end{column}
+    \end{columns}
+\end{frame}
+
 \begin{frame}{Intrinsic vs Post-Hoc: CLE4EVR}
     \begin{center}
         \textbf{Visual Comparison on CLE4EVR} \\

@@ -237,7 +237,15 @@ As shown by the negative rank correlation (\textbf{$-0.09$} on CLE4EVR, \textbf{
     \item \textbf{ProtoPNet Internal} highlights broad, diffuse spatial regions, including the objects and their surrounding context (\textbf{Complexity: 0.52}, see Fig. \ref{fig:protopnet_grids}).
 \end{itemize}
 
-While SHAP achieves higher localization accuracy against strict bounding boxes, it fails to represent how the network actually reasons. ProtoPNet learns prototypes that capture broader contextual relationships (e.g., "object glow" or "inter-object spacing") rather than strict object boundaries.
+While SHAP achieves higher localization accuracy against strict bounding boxes, it fails to represent how the network actually reasons. ProtoPNet learns prototypes that capture broader contextual relationships (e.g., "object glow" or "inter-object spacing") rather than strict object boundaries. Figure \ref{fig:protopnet_prototypes} provides a visual representation of these learned prototypes.
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=0.48\textwidth]{explanations/protopnet_cle4evr_prototypes.png}\hfill
+\includegraphics[width=0.48\textwidth]{explanations/protopnet_mnmath_prototypes.png}
+\caption{Visual representation of learned prototypes by ProtoPNet. Left: Examples of prototypes on CLE4EVR. Right: Examples on MNMath.}
+\label{fig:protopnet_prototypes}
+\end{figure*}
 
 \section{Conclusion}
 This study demonstrates the risks of relying solely on post-hoc explainers. Methods like SHAP and LIME provide neat, edge-aligned visual explanations that align with human intuition, but they fundamentally disagree with the actual internal cognitive mechanisms of models designed for intrinsic interpretability \cite{rudin2019stop}. Evaluating XAI methods strictly on "localization accuracy" can be misleading if the ground truth masks assume networks reason like humans. Future work will extend this evaluation framework to hybrid quantum-classical neural networks (Hybrid QCNN/QViT).
